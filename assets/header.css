@@ -1,0 +1,22 @@
+body {
+	  width: 100%;
+	  height: 100%;
+	  margin: 0;
+	  padding: 0;
+	  background-color: #FAFAFA;
+	  /* font-size: 1.1rem; */
+	  line-height: 1.3;
+ }
+
+.gs-header{ color: white !important; -webkit-print-color-adjust: exact; }
+
+.gs-text-header{ background: #C41230 !important; -webkit-print-color-adjust: exact; }
+
+.gs-table-header{ background: #C41230 !important; -webkit-print-color-adjust: exact; }
+
+.offsets-dis-by-one.column{ margin-right: 8.66666666667%; }
+
+.row > .columns:not(:first-child){
+	padding-left: 20px;
+}
+

@@ -1,109 +1,149 @@
 '''
 Notes
 
-I am still finding out why the buttons do not fill the entire div that they are contained in.
-Next step: look at Dash HTML code
-
+* Turning everything into the same style
+* Making sure the advanced analytics page and lyrics page are interactive
+* In order to make things interactive we need to enable the callback within the same page
+* Filters on genre, artist, year (top2000)
 
 CSS in Dash: https://dash.plot.ly/external-resources
 '''
-
 
 import dash
 from dash.dependencies import Input, Output
 import dash_core_components as dcc
 import dash_html_components as html
 
+import elements
+
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 app.scripts.config.serve_locally = True
+app.title = "Top 2000"
 vertical = True
 
+placeholder = html.Div([
+    html.H3('Tab content 1'),
+    dcc.Graph(
+        id='graph-1-tabs',
+        figure={
+            'data': [{
+                'x': [1, 2, 3],
+                'y': [3, 1, 2],
+                'type': 'bar'
+            }]
+        }
+    )
+])
 
-def tab_style(vertical):
-    if vertical:
-        style = {
-            'height': '100vh',
-            'width': '18vw',
-            'borderRight': 'thin lightgrey solid',
-            'textAlign': 'left',
-            'float': 'left',
-            # "border": "2px dashed lightgreen",
-                 }
-    else:
-        style = {'width': '100vh'}
-    return style
+# external_css = [
+#     "https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css",
+#     "https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css",  # this one contains the headers
+#     "//fonts.googleapis.com/css?family=Raleway:400,300,600",
+#     "https://codepen.io/bcd/pen/KQrXdb.css",
+#     "https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+# ]
 
-
-# @app.callback([Output('tab_id_1', 'style'),
-#                Output('tab_id_2', 'style'),
-#                Output('tab_id_3', 'style')],
-#               [Input('tabs', 'value')])
-# def display_content(tab_value):
-#     print(tab_value)
-#     style_update = {}
-#     style_hidden = {
-#         "display":"none",
-#         # "border": "5px solid blue",
-#     }
+# for css in external_css:
+#     app.css.append_css({"external_url": css})
 #
-#     if tab_value ==1:
-#         return style_update, style_hidden, style_hidden
-#     if tab_value ==2:
-#         return style_hidden, style_update, style_hidden
-#     if tab_value ==3:
-#         return style_hidden, style_hidden, style_update
-
+# external_js = [
+#     "https://code.jquery.com/jquery-3.2.1.min.js",
+#     "https://codepen.io/bcd/pen/YaXojL.js"
+# ]
+#
+# for js in external_js:
+#     app.scripts.append_script({"external_url": js})
+#
 
 
 if vertical:
     app.layout = html.Div(
         [
+            # components which contains the tab structure
             html.Div(
                 [
-                    # JADS image
-                    html.Div([
-                        html.Img(
-                            src='https://www.nporadio2.nl/templates/radio2/images/top2000/logo.png',
-                            #"https://www.bigdata-alliance.org/wp-content/uploads/2017/02/JADS_logo_100_RGB_fc_CS6.png",
-                            className='one columns',
-                            style={
-                                'height': '15%',
-                                'width': '90%',
-                                'float': 'left',
-                                # 'position': 'relative',
-                                # "border": "2px solid red",
-                                # "clearfix": {"after": {"content": "","clear": "both", "display": "table",}},
-                            },
-                        ),
-                    ]),
+                    # image
+                    html.Div([elements.top_2000_img]),
 
-                    # Tabs element
-                    html.Div(
-                        [
-                            dcc.Tabs(
-                                id='tabs',
-                                children=
-                                [
-                                    dcc.Tab(label='Currently playing',  value=1),
-                                    dcc.Tab(label='Fun Facts',          value=2),
-                                    dcc.Tab(label='Advanced analytics', value=3),
-                                    dcc.Tab(label='Lyrics analysis',    value=4),
+                    # everything underneath the image
+                    html.Div([
+                        # Tabs element
+                        html.Div(
+                            [elements.tabs],
+                            style={
+                                "float": "left",
+                                "width": "100vw",
+                                # "border": "2px dashed blue",
+                                "margin": "0 0 0 0",
+                                "clear": "both"
+                            },
+                            className="row one columns",
+                        ),
+
+                        html.Div([
+                            html.H6(['Genre'], style={"margin":"1rem 0 0 0"}),
+                            dcc.Dropdown(
+                                options=[
+                                    {'label': 'Korean Pop', 'value': 'KPOP'},
+                                    {'label': 'Pop', 'value': 'POP'},
+                                    {'label': 'Hip-Hop', 'value': 'HipHop'}
                                 ],
-                                value=1,
-                                vertical=vertical,
-                                style=tab_style(vertical),
-                                className='custom-tabs-container'
+                                value='HipHop',
+                                multi=True,
+                                style={
+                                    "margin": "0 0 0 0",
+                                    "width": "100%",
+                                       },
                             ),
+
+                            html.H6(['Artist'], style={"margin":"1rem 0 0 0"}),
+                            dcc.Dropdown(
+                                options=[
+                                    {'label': 'Korean Pop', 'value': 'KPOP'},
+                                    {'label': 'Pop', 'value': 'POP'},
+                                    {'label': 'Hip-Hop', 'value': 'HipHop'}
+                                ],
+                                value='HipHop',
+                                multi=True,
+                                style={
+                                    "margin": "0 0 0 0",
+                                    "width": "100%",
+                                },
+                            ),
+
+                            html.H6(['Top2000 Year'], style={"margin":"1rem 0 0 0"}),
+                            dcc.Dropdown(
+                                options=[
+                                    {'label': 'Korean Pop', 'value': 'KPOP'},
+                                    {'label': 'Pop', 'value': 'POP'},
+                                    {'label': 'Hip-Hop', 'value': 'HipHop'}
+                                ],
+                                value='HipHop',
+                                multi=True,
+                                style={
+                                    "margin": "0 0 0 0",
+                                    "width": "100%",
+                                },
+                            )
                         ],
-                        style={
-                            "float": "left",
-                            "width":"100vw",
-                            # "border": "2px dashed blue",
-                            "margin": "0 0 0 0",
-                        },
-                        className="one columns",
-                    ),
+                            style={
+                                "float": "left",
+                                "width": "18vw",
+                                "clear": "both",
+                                # "border": "2px dashed blue",
+                                "margin": "0 0 75px 0",
+                                "position": "fixed",
+                                "bottom" : "10",
+                                # "left":"0",
+                                },
+                            className="row one columns")
+
+                    ], style={
+                        'borderRight': 'thin lightgrey solid',
+                        'height':'100vh'}
+                    )
+
                 ],
                 style={'width': '20vw',
                        'float': 'left',
@@ -112,12 +152,12 @@ if vertical:
                 className="two columns",
             ),
 
-            # add the tabs to the dashboard as children
+            # component which contains the 'tab output' aka the actual content
             html.Div(
                 [
                     html.Div(id='tab-output'),
                 ],
-                style={'width': '75vw',
+                style={'width': '78vw',
                        'float': 'right',
                        }
             ),
@@ -125,9 +165,10 @@ if vertical:
             # hidden component to store data
             html.Div(id='_filtered_df_stored', style={'display': 'none'}),
         ],
+        # className='offsets-dis-by-one column',
         style={
             'fontFamily': 'Sans-Serif',
-            'margin-left': 'auto',
+            'margin-left': '10px',
             'margin-right': 'auto',
         }
     )
@@ -153,33 +194,15 @@ else:
               [Input('tabs', 'value')])
 def render_content(tab):
     if tab == 1:
-        return html.Div([
-            html.H3('Tab content 1'),
-            dcc.Graph(
-                id='graph-1-tabs',
-                figure={
-                    'data': [{
-                        'x': [1, 2, 3],
-                        'y': [3, 1, 2],
-                        'type': 'bar'
-                    }]
-                }
-            )
-        ])
+        # return placeholder
+        return elements.landing_page
     elif tab == 2:
-        return html.Div([
-            html.H3('Tab content 2'),
-            dcc.Graph(
-                id='graph-2-tabs',
-                figure={
-                    'data': [{
-                        'x': [1, 2, 3],
-                        'y': [5, 10, 6],
-                        'type': 'bar'
-                    }]
-                }
-            )
-        ])
+        return elements.fun_facts_page
+    elif tab == 3:
+        return elements.advanced_page
+    elif tab == 4:
+        # return placeholder
+        return elements.lyrics_page
 
 
 if __name__ == '__main__':
