@@ -1,14 +1,16 @@
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.graph_objs as go
-from functions import tab_style, Header, get_subheader, generate_adv_analytic_1, generate_adv_analytic_2, update_plots
+from functions import *
 import load_data
 from copy import copy
 
-speedup = False
+speedup = True
 vertical = True
 
 df_audio_feats = load_data.load_df_audio_feats()
+current_song = df_audio_feats.iloc[0]  #TODO song has to be automatically updated based off the user's behaviour
+
 
 top_2000_img = html.Img(
     src='https://www.nporadio2.nl/templates/radio2/images/top2000/logo.png',
@@ -23,7 +25,7 @@ tabs = dcc.Tabs(
     id='tabs',
     children=
     [
-        dcc.Tab(label='Currently playing', value=1),
+        dcc.Tab(label='Pick your song', value=1),
         dcc.Tab(label='Fun Facts', value=2),
         dcc.Tab(label='Advanced analytics', value=3),
         dcc.Tab(label='Lyrics analysis', value=4),
@@ -134,9 +136,56 @@ if speedup == False:
             }
         ),
     ])
-
-
-landing_page = html.Div([
+    landing_page_1 = html.Div([
         html.H3('Takes a milly times to render'),
+        html.Div([track_['preview_url']]),
         dcc.Graph(id='Vincent_plot', figure=update_plots(df_audio_analysis)),
     ])
+
+
+
+
+
+landing_page_2 = html.Div([
+    Header("Pick your song", 3),
+
+    html.Div([
+        html.Div([
+            get_subheader('Play Track Sample', size=4, className="gs-header gs-text-header"),
+            dcc.Dropdown(
+                options=create_dd_options(df_audio_feats['Title']),
+                value=current_song,
+                multi=True,
+                style={"width":"80%"},
+            ),
+            html.H5('{} - {}'.format(current_song['Title'], current_song['Artist'])),
+
+            html.A(
+                id='playButton',
+                href=get_track_sample(current_song),
+                children=html.Img(src="http://pluspng.com/img-png/play-button-png-play-button-png-picture-1024.png",
+                                  style={
+                                      'height': '10%',
+                                      'width': '10%',
+                                      'float': 'left',
+                                  }),
+                target="_blank",
+                className="gs-header gs-text-header",
+            ),
+        ], className='six columns'),
+
+        html.Div([
+            get_subheader('Text', size=4, className="gs-header gs-text-header"),
+            html.Div([
+                dcc.Markdown('{}'.format('Placeholder text ' *20))
+                ], style={"margin": "0 0 0 30"})
+        ], className='six columns',
+        ),
+
+    ], className='row twelve columns'),
+
+
+    # html.Div([ipd.Audio(url=music_url)]),   # doesn't work bc Dash doesn't accept any non-dash elements except lists etc
+
+])
+

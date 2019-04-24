@@ -36,6 +36,9 @@ placeholder = html.Div([
     )
 ])
 
+
+
+
 # external_css = [
 #     "https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css",
 #     "https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css",  # this one contains the headers
@@ -195,13 +198,13 @@ else:
 def render_content(tab):
     if tab == 1:
         # return placeholder
-        return elements.landing_page
+        return elements.landing_page_2
     elif tab == 2:
         return elements.fun_facts_page
     elif tab == 3:
         return elements.advanced_page
     elif tab == 4:
-        # return placeholder
+        return placeholder
         return elements.lyrics_page
 
 

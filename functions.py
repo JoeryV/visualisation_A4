@@ -32,7 +32,7 @@ def get_header(title, size):
 
     return header
 
-def get_subheader(title, size, className="", header=False):
+def get_subheader(title, size=3, className="", header=False):
     if size==1:
         title_element = html.H1(title, className=className)
     elif size==2:
@@ -123,6 +123,48 @@ def generate_adv_analytic_2(df):
 
 
 # Vincent functions
+#TODO vincent's functions need to be updated by song (radar), song & years (rank_plot), song & attribute & years
+# (attribute vs time), additionally it should work with comparing multiple songs
+def update_radar(song):
+    idx = df.index[df['Title'] == song].tolist()[0]
+    data = [go.Scatterpolar(
+        r=df.loc[idx, features].values,
+        theta=features,
+        fill='toself'
+    )]
+
+    layout = go.Layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 1]
+            )
+        ),
+        showlegend=False
+    )
+
+    fig = go.Figure(data=data, layout=layout)
+    return fig
+
+
+def update_rank_plot(song, years):
+    idx = df.index[df['Title'] == song].tolist()[0]
+    start, stop = year_list.index(years[0]), year_list.index(years[1])
+    rankings = df.loc[idx, year_list].values[start:stop + 1]
+
+    # Create a trace
+    trace = go.Scatter(
+        x=year_list[start: stop + 1],
+        y=rankings
+    )
+
+    layout = go.Layout(title='Rank of Song by Year', yaxis=dict(range=[2000, 1]))
+    data = [trace]
+    fig = go.Figure(data=data, layout=layout)
+    py.offline.iplot(fig, filename='basic-line')
+
+
+
 def update_plots(df, song="Bohemian Rhapsody", attribute="loudness_start", years=("1999", "2018")):
     attributes = ['loudness_start', 'tempo', 'key', 'mode', 'time_signature']
     features = ['danceability', 'energy', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence']
@@ -249,6 +291,27 @@ def update_plots(df, song="Bohemian Rhapsody", attribute="loudness_start", years
     fig = dict(data=data, layout=layout)
     return fig
 
+
+
+# spotify functions
+import spotipy
+import spotipy.util as util
+import token_files as tf
+
+def get_track_sample(current_song):
+    client_id = tf.SPOTIPY_CLIENT_ID
+    client_secret = tf.SPOTIPY_CLIENT_SECRET
+    redirect_uri = 'http://localhost/'
+    spotify_user = 'Joery de Vos'
+
+    token = util.prompt_for_user_token(spotify_user, 'user-read-recently-played',
+                                       client_id = client_id,
+                                       client_secret = client_secret,
+                                       redirect_uri = redirect_uri)
+    sp = spotipy.Spotify(auth=token)
+    sample = sp.track(current_song['uri'])
+    print("track sample: \t", sample['preview_url'])
+    return sample['preview_url']
 
 
 
