@@ -51,12 +51,21 @@ def get_subheader(title, size=3, className="", header=False):
     else:
         return html.Div([title_element, html.Br([])]) #title_element
 
-
 def create_dd_options(list_of_values):
     options = []
     for value in list_of_values:
         options.append({"label": value, "value": value})
     return options
+
+def generate_year_options(df, col='Year'):
+    years = df[col].astype(int)
+    # year_range = list(range(years.min(), years.max()+1, 10)) + [2018]
+    year_range = list([1924] + list(range(1930, 2020, 10)) + [2018])
+    year_range = ['1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006',
+                  '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014',
+                  '2015', '2016', '2017', '2018']
+    year_dict = {year: year for year in year_range}
+    return year_dict
 
 
 # Casper functions
@@ -82,7 +91,10 @@ def generate_adv_analytic_1(df):
 
 def generate_adv_analytic_2(df):
     var_dic = {}
-    columns = [i for i in df.columns[24:28].append(df.columns[40:41].append(df.columns[29:35]))]
+    columns = ['danceability', 'energy', 'key', 'loudness', 'duration_ms',
+               'speechiness', 'acousticness', 'instrumentalness', 'liveness',
+               'valence', 'tempo']
+    # old code for columns: [i for i in df.columns[24:28].append(df.columns[40:41]).append(df.columns[29:35])]
 
     for column in columns:
         df['AVG_' + column] = df.groupby('Year')[column].transform('mean')
@@ -125,13 +137,40 @@ def generate_adv_analytic_2(df):
 # Vincent functions
 #TODO vincent's functions need to be updated by song (radar), song & years (rank_plot), song & attribute & years
 # (attribute vs time), additionally it should work with comparing multiple songs
-def update_radar(song):
+def create_attributePlot(df, song, attribute):
+    '''Function updates the attribute vs time plot on the first page of the dashboard'''
+    song = song[0]
     idx = df.index[df['Title'] == song].tolist()[0]
-    data = [go.Scatterpolar(
-        r=df.loc[idx, features].values,
+    source = get_source(attribute)
+    print(idx, attribute, source)
+    y_vals, time = get_values(df, idx, source, attribute)
+
+
+    data = []
+    attribute_trace = go.Scatter(
+        x = time,
+        y = y_vals
+    )
+    data.append(attribute_trace)
+    layout = go.Layout(
+        title="{} vs. Time".format(attribute.capitalize()),
+        paper_bgcolor='#FAFAFA',
+        plot_bgcolor='#FAFAFA'
+    )
+    fig = go.Figure(data=data, layout=layout)
+    return fig
+
+
+def create_radar(currentSong):
+    features = ['danceability', 'energy', 'speechiness', 'acousticness',
+                'instrumentalness', 'liveness', 'valence']
+
+
+    trace = go.Scatterpolar(
+        r=currentSong.iloc[0][features].values,
         theta=features,
-        fill='toself'
-    )]
+        fill='toself')
+    data = [trace]
 
     layout = go.Layout(
         polar=dict(
@@ -140,29 +179,54 @@ def update_radar(song):
                 range=[0, 1]
             )
         ),
+        # margin=
+        paper_bgcolor='#FAFAFA',
+        plot_bgcolor='#FAFAFA',
         showlegend=False
     )
 
     fig = go.Figure(data=data, layout=layout)
     return fig
 
-
-def update_rank_plot(song, years):
+def create_rank_plot(df, song, years):
+    year_list = ['1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006',
+                 '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014',
+                 '2015', '2016', '2017', '2018']
+    print(song)
+    song = song[0]
     idx = df.index[df['Title'] == song].tolist()[0]
-    start, stop = year_list.index(years[0]), year_list.index(years[1])
+    start, stop = year_list.index(str(years[0])), year_list.index(str(years[1]))
     rankings = df.loc[idx, year_list].values[start:stop + 1]
 
-    # Create a trace
     trace = go.Scatter(
         x=year_list[start: stop + 1],
         y=rankings
     )
 
-    layout = go.Layout(title='Rank of Song by Year', yaxis=dict(range=[2000, 1]))
+    xaxis=dict()
+    yaxis=dict()
+
+    if stop-start <5:
+        xaxis=dict(nticks=stop-start+1)
+    if rankings.max()-rankings.min() < 5:
+        yaxis=dict(nticks=int(rankings.max()-rankings.min()+1))
+
+    layout = go.Layout(title='Rank of Song by Year',
+                       xaxis=xaxis,
+                       yaxis=yaxis,
+                       paper_bgcolor='#FAFAFA',
+                       plot_bgcolor='#FAFAFA',
+                       # margin=go.layout.Margin(
+                       #     l=10,
+                       #     r=10,
+                       #     b=10,
+                       #     t=10,
+                       # ),
+
+                       )  # , yaxis=dict(range=[2000, 1]))
     data = [trace]
     fig = go.Figure(data=data, layout=layout)
-    py.offline.iplot(fig, filename='basic-line')
-
+    return fig
 
 
 def update_plots(df, song="Bohemian Rhapsody", attribute="loudness_start", years=("1999", "2018")):
@@ -292,7 +356,6 @@ def update_plots(df, song="Bohemian Rhapsody", attribute="loudness_start", years
     return fig
 
 
-
 # spotify functions
 import spotipy
 import spotipy.util as util
@@ -309,9 +372,5 @@ def get_track_sample(current_song):
                                        client_secret = client_secret,
                                        redirect_uri = redirect_uri)
     sp = spotipy.Spotify(auth=token)
-    sample = sp.track(current_song['uri'])
-    print("track sample: \t", sample['preview_url'])
+    sample = sp.track(current_song['uri'].iloc[0])
     return sample['preview_url']
-
-
-
