@@ -85,7 +85,13 @@ def generate_adv_analytic_1(df):
         steps.append(step)
 
     sliders = [dict( active = 19, currentvalue = {"prefix": "Year: "}, pad = {"t": 50}, steps = steps )]
-    layout = go.Layout(sliders=sliders,  xaxis=dict(range=[1938,2020]), yaxis=dict(range=[0,100]), title='Number of songs per Publication Year')
+    layout = go.Layout(sliders=sliders,
+                       xaxis=dict(range=[1938,2020]),
+                       yaxis=dict(range=[0,100]),
+                       title='Number of songs per Publication Year',
+                       paper_bgcolor='#FAFAFA',
+                       plot_bgcolor='#FAFAFA',
+                       )
     fig = dict(data=data, layout=layout)
     return(fig)
 
@@ -127,8 +133,12 @@ def generate_adv_analytic_2(df):
                        {'title': 'Publication year averages for {}'.format(columns[i]),
                         'annotations': []}]) for i in range(len(columns))]))])
 
-    layout = dict(title='Publication year averages', showlegend=False,
-                  updatemenus=updatemenus)
+    layout = dict(title='Publication year averages',
+                  showlegend=False,
+                  updatemenus=updatemenus,
+                  paper_bgcolor='#FAFAFA',
+                  plot_bgcolor='#FAFAFA',
+                  )
 
     fig = dict(data=data, layout=layout)
     return (fig)
@@ -179,7 +189,6 @@ def create_radar(currentSong):
                 range=[0, 1]
             )
         ),
-        # margin=
         paper_bgcolor='#FAFAFA',
         plot_bgcolor='#FAFAFA',
         showlegend=False
@@ -229,134 +238,135 @@ def create_rank_plot(df, song, years):
     return fig
 
 
-def update_plots(df, song="Bohemian Rhapsody", attribute="loudness_start", years=("1999", "2018")):
-    attributes = ['loudness_start', 'tempo', 'key', 'mode', 'time_signature']
-    features = ['danceability', 'energy', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence']
-    year_list = ['1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010',
-                 '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018']
-
-
-    idx = df.index[df['Title'] == song].tolist()[0]
-    start, stop = year_list.index(years[0]), year_list.index(years[1])
-    rankings = df.loc[idx, year_list].values[start:stop + 1]
-
-    source = get_source(attribute)
-    y_vals, time = get_values(df, idx, source, attribute)
-
-    # Create a trace
-    attribute_trace = go.Scatter(
-        x=time,
-        y=y_vals
-    )
-
-    # Create a trace
-    rank_trace = go.Scatter(
-        x=year_list[start: stop + 1],
-        y=rankings,
-        mode='lines+markers',
-        xaxis='x2',
-        yaxis='y2'
-    )
-
-    radar_trace = go.Scatterpolar(
-        r=df.loc[idx, features].values,
-        theta=features,
-        fill='toself'
-    )
-
-    data = [attribute_trace, rank_trace, radar_trace]
-
-    xaxis, yaxis = get_time_series_layout_params(attribute, xdomain=[0, 1], ydomain=[0, 0.25])
-
-    layout = dict(
-        showlegend=False,
-        autosize=False,  # Allows for custom-sized plot
-        width=900,  # Control width of OVERALL plot
-        height=1000,  # Control height of OVERALL plot
-
-        # Axes for Attribute plot (time series), defined in line 32
-        xaxis=xaxis,
-        yaxis=yaxis,
-
-        # Axes for Rank plot
-        xaxis2=dict(
-            title='Year',
-            domain=[0, 1],
-            anchor='y2'
-        ),
-        yaxis2=dict(
-            title='Ranking',
-            #             range=[2000, 1],
-            domain=[0.4, 0.65]),
-
-        # Axes for Radar Plot
-        polar=dict(
-
-            # This domain controls the position of the radar plot.  Vals must be between 0 and 1
-            domain=dict(
-                x=[0, 0.45],
-                y=[0.7, 0.95]
-            ),
-
-            # Controls min and max values for radar plot
-            radialaxis=dict(
-                visible=True,
-                range=[0, 1]
-            ),
-
-            angularaxis=dict(
-                thetaunit="radians"
-            )
-        ),
-
-        annotations=[
-            dict(
-                x=0.5,
-                y=0.275,
-                text='Attribute vs. Time',
-                xref="paper",
-                yref="paper",
-                xanchor="center",
-                yanchor="bottom",
-                showarrow=False,
-                font={
-                    'size': 16
-                }
-            ),
-            dict(
-                x=0.5,
-                y=0.675,
-                text='Rank by Year',
-                xref="paper",
-                yref="paper",
-                xanchor="center",
-                yanchor="bottom",
-                showarrow=False,
-                font={
-                    'size': 16
-                }
-            ),
-            dict(
-                x=0.45 / 2,
-                y=1,
-                text='Audio Features',
-                xref="paper",
-                yref="paper",
-                xanchor="center",
-                yanchor="bottom",
-                showarrow=False,
-                font={
-                    'size': 16
-                }
-            )
-        ]
-    )
-
-    fig = dict(data=data, layout=layout)
-    return fig
+# def update_plots(df, song="Bohemian Rhapsody", attribute="loudness_start", years=("1999", "2018")):
+#     attributes = ['loudness_start', 'tempo', 'key', 'mode', 'time_signature']
+#     features = ['danceability', 'energy', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence']
+#     year_list = ['1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010',
+#                  '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018']
+#
+#
+#     idx = df.index[df['Title'] == song].tolist()[0]
+#     start, stop = year_list.index(years[0]), year_list.index(years[1])
+#     rankings = df.loc[idx, year_list].values[start:stop + 1]
+#
+#     source = get_source(attribute)
+#     y_vals, time = get_values(df, idx, source, attribute)
+#
+#     # Create a trace
+#     attribute_trace = go.Scatter(
+#         x=time,
+#         y=y_vals
+#     )
+#
+#     # Create a trace
+#     rank_trace = go.Scatter(
+#         x=year_list[start: stop + 1],
+#         y=rankings,
+#         mode='lines+markers',
+#         xaxis='x2',
+#         yaxis='y2'
+#     )
+#
+#     radar_trace = go.Scatterpolar(
+#         r=df.loc[idx, features].values,
+#         theta=features,
+#         fill='toself'
+#     )
+#
+#     data = [attribute_trace, rank_trace, radar_trace]
+#
+#     xaxis, yaxis = get_time_series_layout_params(attribute, xdomain=[0, 1], ydomain=[0, 0.25])
+#
+#     layout = dict(
+#         showlegend=False,
+#         autosize=False,  # Allows for custom-sized plot
+#         width=900,  # Control width of OVERALL plot
+#         height=1000,  # Control height of OVERALL plot
+#
+#         # Axes for Attribute plot (time series), defined in line 32
+#         xaxis=xaxis,
+#         yaxis=yaxis,
+#
+#         # Axes for Rank plot
+#         xaxis2=dict(
+#             title='Year',
+#             domain=[0, 1],
+#             anchor='y2'
+#         ),
+#         yaxis2=dict(
+#             title='Ranking',
+#             #             range=[2000, 1],
+#             domain=[0.4, 0.65]),
+#
+#         # Axes for Radar Plot
+#         polar=dict(
+#
+#             # This domain controls the position of the radar plot.  Vals must be between 0 and 1
+#             domain=dict(
+#                 x=[0, 0.45],
+#                 y=[0.7, 0.95]
+#             ),
+#
+#             # Controls min and max values for radar plot
+#             radialaxis=dict(
+#                 visible=True,
+#                 range=[0, 1]
+#             ),
+#
+#             angularaxis=dict(
+#                 thetaunit="radians"
+#             )
+#         ),
+#
+#         annotations=[
+#             dict(
+#                 x=0.5,
+#                 y=0.275,
+#                 text='Attribute vs. Time',
+#                 xref="paper",
+#                 yref="paper",
+#                 xanchor="center",
+#                 yanchor="bottom",
+#                 showarrow=False,
+#                 font={
+#                     'size': 16
+#                 }
+#             ),
+#             dict(
+#                 x=0.5,
+#                 y=0.675,
+#                 text='Rank by Year',
+#                 xref="paper",
+#                 yref="paper",
+#                 xanchor="center",
+#                 yanchor="bottom",
+#                 showarrow=False,
+#                 font={
+#                     'size': 16
+#                 }
+#             ),
+#             dict(
+#                 x=0.45 / 2,
+#                 y=1,
+#                 text='Audio Features',
+#                 xref="paper",
+#                 yref="paper",
+#                 xanchor="center",
+#                 yanchor="bottom",
+#                 showarrow=False,
+#                 font={
+#                     'size': 16
+#                 }
+#             )
+#         ]
+#     )
+#
+#     fig = dict(data=data, layout=layout)
+#     return fig
 
 
 # spotify functions
+
 import spotipy
 import spotipy.util as util
 import token_files as tf
@@ -374,3 +384,4 @@ def get_track_sample(current_song):
     sp = spotipy.Spotify(auth=token)
     sample = sp.track(current_song['uri'].iloc[0])
     return sample['preview_url']
+

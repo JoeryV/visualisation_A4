@@ -31,7 +31,14 @@ app.scripts.config.serve_locally = True
 app.title = "Top 2000"
 vertical = True
 attributes = ['tempo', 'key', 'mode', 'time_signature'] #TODO loadness start is not in the new df. Does Vincent want it? If so, add it in,
+genre_options = create_dd_options(df['primary_genre'].dropna().unique())
+genre_options.append({"label": "all genres", "value": "all genres"})
 
+artist_options = create_dd_options(df["Artist"].dropna().unique())
+artist_options.append({"label": "all artists", "value": "all genres"})
+
+releaseYear_options = create_dd_options(df["Year"].dropna().unique())
+releaseYear_options.append({"label": "all release years", "value": "all release years"})
 
 placeholder = html.Div([
     html.H3('Tab content 1'),
@@ -55,6 +62,7 @@ p1 = html.Div([
         html.Div([html.H6(children="Song: ")], className="one columns"),
 
         # The dropdown to select the song
+        #TODO update this dropdown based on the global params
         html.Div([
             dcc.Dropdown(
                 id="dd_song",
@@ -68,10 +76,11 @@ p1 = html.Div([
     ], className="row twelve columns"),
 
     # This row contains the Attribute Dropdown
+    #TODO update this dropdown based on the global params
     html.Div([
         html.Div([html.H6(children="Attribute: ")], className="one columns"),
 
-        # The dropdown to select the song
+        # The dropdown to select the attribute
         html.Div([
             dcc.Dropdown(
                 id="dd_attribute",
@@ -198,15 +207,73 @@ The Top 2000 Team''')),
 id="tab_id_1",)
 
 
-p2 = html.Div([],
-              id="tab_id_2",
-              style={'display':"none"}
-              )
+p2 = html.Div([
+    html.Div([
+        Header(),
+
+        # Row contains best artist and best song
+        html.Div([
+            # Contains the Best artist block
+            html.Div([
+                get_subheader(title="Best artist", size=4, className="gs-header gs-text-header"),
+                html.Div([
+                    html.H3(df.Artist.value_counts().index[0]),
+                    html.Img(src='https://logonoid.com/images/thumbs/the-beatles-logo.png', height='40',
+                             width='160'),
+                ],
+                    className="six columns"),
+                html.H1(str(df.Artist.value_counts()[0])),
+                html.P("Times")
+            ], className = "six columns"),
+
+            # Contains the best scoring song
+            html.Div([
+                get_subheader(title="Overall best rated song", size=4, className="gs-header gs-text-header"),
+                html.H3(df.iloc[(df.iloc[:,4:24]==1).sum(axis=1).index[0]].Title + " - " + df.iloc[(df.iloc[:,4:24]==1).sum(axis=1).index[0]].Artist),
+                html.Img(src='https://upload.wikimedia.org/wikipedia/commons/b/bd/Bohemian_Rhapsody_by_Queen_US_vinyl_red_label.png', height='160', width='160'),
+                html.H1(str((df.iloc[:,4:24]==1).sum(axis=1)[0])),
+                html.P("Times")
+            ], className = "six columns"),
+
+        ], className="row"),
+
+        # Row contains the highest climber and biggest lost
+        html.Div([
+
+            # Contains the highest climber
+            html.Div([
+                get_subheader(title="Highest climber", size=4, className="gs-header gs-text-header"),
+                html.H3(df.iloc[df.iloc[:,4:24][(df.iloc[:,4:24].diff(axis=1) == df.iloc[:,4:24].diff(axis=1).min().min()).sum(axis=1)>0].index].Artist + "-" + df.iloc[df.iloc[:,4:24][(df.iloc[:,4:24].diff(axis=1) == df.iloc[:,4:24].diff(axis=1).min().min()).sum(axis=1)>0].index].Title),
+                html.Img(src='https://upload.wikimedia.org/wikipedia/it/a/a9/Adele%2C_Someone_Like_You_%28Jake_Nava%29.png', height='160', width='160'),
+                html.H2(str(int(abs(df.iloc[:,4:24].diff(axis=1).min().min())))),
+                html.P("Places")
+            ], className="six columns"),
+
+            # Contains the biggest lost
+            html.Div([
+                get_subheader(title="Biggest loser", size=4, className="gs-header gs-text-header"),
+                html.H3(df.iloc[df.iloc[:,4:24][(df.iloc[:,4:24].diff(axis=1) == df.iloc[:,4:24].diff(axis=1).max().max()).sum(axis=1)>0].index].Artist + "-" + df.iloc[df.iloc[:,4:24][(df.iloc[:,4:24].diff(axis=1) == df.iloc[:,4:24].diff(axis=1).max().max()).sum(axis=1)>0].index].Title),
+                html.Img(src='https://img.cdandlp.com/2018/04/imgL/119125064.png', height='160', width='160'),
+                html.H2(str(int(abs(df.iloc[:,4:24].diff(axis=1).max().max())))),
+                html.P("Places")
+            ], className="six columns"),
+
+        ], className="row")
+    ]),
+],
+    className="twelve columns",
+    id="tab_id_2",
+    style={'display': "none"}
+)
 
 p3 = html.Div([
-    html.H3('Tab content 3'),
-    dcc.Graph(id='historical_plot', figure=generate_adv_analytic_1(df)),
-    dcc.Graph(id='other_plot', figure=generate_adv_analytic_2(df))
+    Header("Advanced Analytics"),
+
+    html.Div([
+        dcc.Graph(id='historical_plot', figure=generate_adv_analytic_1(df)),# className="six columns"),
+        dcc.Graph(id='other_plot', figure=generate_adv_analytic_2(df)),#  className="six columns")
+    ], className='row')
+
 ],
     id="tab_id_3",
     style={'display':"none"}
@@ -216,7 +283,6 @@ p4 = html.Div([],
               id="tab_id_4",
               style={'display':"none"}
               )
-
 
 # external_css = [
 #     "https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css",
@@ -257,7 +323,6 @@ if vertical:
                             style={
                                 "float": "left",
                                 "width": "100vw",
-                                # "border": "2px dashed blue",
                                 "margin": "0 0 0 0",
                                 "clear": "both"
                             },
@@ -269,27 +334,9 @@ if vertical:
                         html.Div([
                             html.H6(['Genre'], style={"margin":"1rem 0 0 0"}),
                             dcc.Dropdown(
-                                options=[
-                                    {'label': 'Korean Pop', 'value': 'KPOP'},
-                                    {'label': 'Pop', 'value': 'POP'},
-                                    {'label': 'Hip-Hop', 'value': 'HipHop'}
-                                ],
-                                value='HipHop',
-                                multi=True,
-                                style={
-                                    "margin": "0 0 0 0",
-                                    "width": "100%",
-                                       },
-                            ),
-
-                            html.H6(['Artist'], style={"margin":"1rem 0 0 0"}),
-                            dcc.Dropdown(
-                                options=[
-                                    {'label': 'Korean Pop', 'value': 'KPOP'},
-                                    {'label': 'Pop', 'value': 'POP'},
-                                    {'label': 'Hip-Hop', 'value': 'HipHop'}
-                                ],
-                                value='HipHop',
+                                id="ddGenre",
+                                options=genre_options,
+                                value=["all genres"],
                                 multi=True,
                                 style={
                                     "margin": "0 0 0 0",
@@ -297,14 +344,23 @@ if vertical:
                                 },
                             ),
 
-                            html.H6(['Top2000 Year'], style={"margin":"1rem 0 0 0"}),
+                            html.H6(['Artist'], style={"margin":"1rem 0 0 0"}),
                             dcc.Dropdown(
-                                options=[
-                                    {'label': 'Korean Pop', 'value': 'KPOP'},
-                                    {'label': 'Pop', 'value': 'POP'},
-                                    {'label': 'Hip-Hop', 'value': 'HipHop'}
-                                ],
-                                value='HipHop',
+                                id="ddArtist",
+                                options=artist_options,
+                                value=["all artists"],
+                                multi=True,
+                                style={
+                                    "margin": "0 0 0 0",
+                                    "width": "100%",
+                                },
+                            ),
+
+                            html.H6(["Release Year"], style={"margin":"1rem 0 0 0"}),
+                            dcc.Dropdown(
+                                id="ddReleaseYear",
+                                options=releaseYear_options,
+                                value=["all release years"],
                                 multi=True,
                                 style={
                                     "margin": "0 0 0 0",
@@ -316,15 +372,12 @@ if vertical:
                                 "float": "left",
                                 "width": "18vw",
                                 "clear": "both",
-                                # "border": "2px dashed blue",
                                 "margin": "0 0 75px 0",
                                 "position": "fixed",
                                 "bottom" : "10",
                                 # "left":"0",
                                 },
                             className="row one columns"),
-
-                        html.Div(id='_filtered_df', style={'display': 'none'}),
 
                     ], style={
                         'borderRight': 'thin lightgrey solid',
@@ -362,7 +415,9 @@ if vertical:
             # ),
 
             # hidden component to store data
-            html.Div(id='_filtered_df_stored', style={'display': 'none'}),
+            html.Div(id='_filtered_df_stored',
+                     # children=df.to_json(date_format='iso', orient="split"),
+                     style={'display': 'none'}),
 
             # hidden component to store data
             html.Div(id='_current_song_stored', style={'display': 'none'}),
@@ -393,25 +448,25 @@ else:
     )
 
 
-@app.callback(Output('_current_song_stored', 'children'),
-              [Input('dd_song', 'value')])
+@app.callback(Output("_current_song_stored", "children"),
+              [Input("dd_song", "value")])
 def updateCurrentSong(song_title):
     current_song = df.loc[df["Title"] == song_title[0]]
-    return current_song.to_json(date_format='iso', orient='split')
+    return current_song.to_json(date_format="iso", orient="split")
 
 
 @app.callback(Output("albumImg", "src"),
-              [Input('_current_song_stored', 'children')])
+              [Input("_current_song_stored", "children")])
 def getAlbumImg(current_song):
-    current_song = pd.read_json(current_song, orient='split')
+    current_song = pd.read_json(current_song, orient="split")
     return current_song["album_image"]
 
 
 @app.callback(Output("songName", "children"),
-              [Input('_current_song_stored', 'children')])
+              [Input("_current_song_stored", "children")])
 def getSongTitle(current_song):
-    current_song = pd.read_json(current_song, orient='split')
-    return "{} - {}".format(current_song['Title'].iloc[0], current_song['Artist'].iloc[0])
+    current_song = pd.read_json(current_song, orient="split")
+    return "{} - {}".format(current_song["Title"].iloc[0], current_song["Artist"].iloc[0])
 
 
 @app.callback(Output("songDuration", "children"),
@@ -431,33 +486,57 @@ def playSong(current_song):
 
 
 @app.callback(Output("rankPlot", "figure"),
-              [Input('dd_song', 'value'),
-               Input('yearRange', 'value'),
+              [#Input("_filtered_df_stored", "children"),
+               Input("dd_song", "value"),
+               Input("yearRange", "value"),
                ])
-def update_rankplot(songname, years):
+def update_rankplot(songname, years): #df,
+    # df = pd.read_json(df, orient="split")
     return create_rank_plot(df, songname, years)
 
 
 @app.callback(Output("radarPlot", "figure"),
-              [Input('_current_song_stored', 'children')])
+              [Input("_current_song_stored", "children")])
 def update_radarplot(current_song):
-    current_song = pd.read_json(current_song, orient='split')
+    current_song = pd.read_json(current_song, orient="split")
     return create_radar(current_song)
 
 
 @app.callback(Output("attributePlot", "figure"),
-              [Input('dd_song', 'value'),
-               Input('dd_attribute', 'value'),
+              [Input("dd_song", "value"),
+               Input("dd_attribute", "value"),
                ])
 def update_attributePlot(songname, attribute):
+    '''Not using filtered df here so we can cut the size of that df.
+    This one will always be based on the songname anyway '''
     return create_attributePlot(df, songname, attribute)
 
 
-@app.callback([Output('tab_id_1', 'style'),
-               Output('tab_id_2', 'style'),
-               Output('tab_id_3', 'style'),
-               Output('tab_id_4', 'style')],
-              [Input('tabs', 'value')])
+# app.callback(Output("_filtered_df_stored", "children"),
+#             [Input("ddGenre", "value"),
+#              Input("ddArtist", "value"),
+#              Input("ddReleaseYear", "value")])
+# def filter_on_df(genres, artists, release_years):
+#     if 'all genres' in genres: genres = df['primary_genre'].unique()
+#     if 'all artists' in artists: artists = df['Artist'].unique()
+#     if 'all release years' in release_years: release_years = df['Year'].unique()
+#
+#     columns = df.columns
+#     columns.remove('segments')
+#     columns.remove('sections')
+#     df = df[columns]
+#     df = df.loc[df["primary_genre"].isin(genres)]
+#     df = df.loc[df["Artist"].isin(artists)]
+#     df = df.loc[df["Year"].isin(release_years)]
+#     return df.to_json(date_format="iso", orient="split")
+
+
+
+@app.callback([Output("tab_id_1", "style"),
+               Output("tab_id_2", "style"),
+               Output("tab_id_3", "style"),
+               Output("tab_id_4", "style")],
+              [Input("tabs", "value")])
 def display_content(tab_value):
     style_update = {}
     style_hidden = {"display":"none"}
@@ -494,4 +573,32 @@ if __name__ == '__main__':
 
 
 
-
+html.Div([
+        dcc.Markdown(children=markdown_text),
+        dcc.Graph(
+            id='word-count-vs-year-all',
+            figure={
+                'data': [
+                    go.Scatter(
+                        y=df_lyrics[df_lyrics['Artist'] == i]['lyrics_word_count'],
+                        x=df_lyrics[df_lyrics['Artist'] == i]['Year'],
+                        text=df_lyrics[df_lyrics['Artist'] == i]['Title'],
+                        mode='markers',
+                        opacity=0.6,
+                        marker={
+                            'size': 10,
+                            'line': {'width': 0.5, 'color': 'white'}
+                        },
+                        name=i
+                    ) for i in sorted(df_lyrics.Artist.unique())
+                ],
+                'layout': go.Layout(
+                    yaxis={'type': 'log', 'title': 'number of words in song'},
+                    xaxis={'title': 'song release year'},
+                    margin={'l': 100, 'b': 40, 't': 10, 'r': 10},
+                    legend={'x': 1, 'y': 1},
+                    hovermode='closest'
+                )
+            }
+        ),
+    ])
