@@ -19,13 +19,20 @@ import dash_core_components as dcc
 
 from functions import *
 from textwrap import dedent
+# from flask_caching import Cache
 from dash.dependencies import Input, Output
 
-df = load_data.load_smaller_full_file()
+
+df = load_data.load_file_100()
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 app.scripts.config.serve_locally = True
 
+# cache = Cache(app.server, config={
+#     'CACHE_TYPE': 'filesystem',
+#     'CACHE_DIR': 'cache-directory'
+# })
+#
 
 # global variables
 app.title = "Top 2000"
@@ -35,7 +42,7 @@ genre_options = create_dd_options(df['primary_genre'].dropna().unique())
 genre_options.append({"label": "all genres", "value": "all genres"})
 
 artist_options = create_dd_options(df["Artist"].dropna().unique())
-artist_options.append({"label": "all artists", "value": "all genres"})
+artist_options.append({"label": "all artists", "value": "all artists"})
 
 releaseYear_options = create_dd_options(df["Year"].dropna().unique())
 releaseYear_options.append({"label": "all release years", "value": "all release years"})
@@ -216,28 +223,72 @@ p2 = html.Div([
             # Contains the Best artist block
             html.Div([
                 get_subheader(title="Best artist", size=4, className="gs-header gs-text-header"),
+
+                # Subrow contains the image + name + amount of times won
                 html.Div([
-                    html.H3(df.Artist.value_counts().index[0]),
-                    html.Img(src='https://logonoid.com/images/thumbs/the-beatles-logo.png', height='40',
-                             width='160'),
+                    # Image of Best Artist
+                    html.Img(
+                        id="bestArtistImg",
+                        src='https://logonoid.com/images/thumbs/the-beatles-logo.png',
+                        # height='20%',
+                        # width='20%',
+                        style={"margin": "0 0 50px 0"},
+                        className="two columns",
+                    ),
+
+                    # IN THE BELOW TWO DIV'S I HARDCODED THE STYLE (LAYOUT). Hope this works out for other songs
+                    # Name of best artist
+                    html.H2(id="bestArtistName", children=getBestArtistName(df), ##TODO have to create a callback for this
+                            style={
+                                "margin": "0 0 0 0",
+                            #     "bottom": "30%",
+                            #     "left": "30%",
+                            #     "margin": "0 0 0 10",
+                            #     "position": "absolute"
+                                    },
+                            className="ten columns",
+                            ),
+
+                    # The amount of times the artist has won
+                    html.H2(id="bestArtistWon", children="won {} times".format(getBestArtistWon(df)), ##TODO have to create a callback for this
+                            style={
+                                "margin": "0 0 0 0",
+                            #     "bottom": "0",
+                            #     "left": "30%",
+                            #     "margin": "0 0 0 0",
+                            #     "position": "absolute"
+                            },
+                                className="ten columns",
+                            ),
                 ],
-                    className="six columns"),
-                html.H1(str(df.Artist.value_counts()[0])),
-                html.P("Times")
-            ], className = "six columns"),
+                    className="row",
+                ),
+            ], className="six columns"),
 
             # Contains the best scoring song
             html.Div([
                 get_subheader(title="Overall best rated song", size=4, className="gs-header gs-text-header"),
-                html.H3(df.iloc[(df.iloc[:,4:24]==1).sum(axis=1).index[0]].Title + " - " + df.iloc[(df.iloc[:,4:24]==1).sum(axis=1).index[0]].Artist),
-                html.Img(src='https://upload.wikimedia.org/wikipedia/commons/b/bd/Bohemian_Rhapsody_by_Queen_US_vinyl_red_label.png', height='160', width='160'),
-                html.H1(str((df.iloc[:,4:24]==1).sum(axis=1)[0])),
-                html.P("Times")
+
+                # subrow contains the best song info
+                html.Div([
+                    html.Img(id="bestSongImg",  # TODO create a callback to update this
+                             src='https://upload.wikimedia.org/wikipedia/commons/b/bd/Bohemian_Rhapsody_by_Queen_US_vinyl_red_label.png',
+                             # height='160', width='160',
+                             style={"margin": "0 0 0 0"},
+                             className="two columns",
+                             ),
+                    html.H2(getBestSongTitle(df) + " - " + getBestSongArtist(df),
+                            style={"margin": "0 0 0 0"},
+                            className="ten columns"),
+                    html.H2("won {} times".format(getBestSongWon(df)),
+                            style={"margin": "0 0 0 0"},
+                            className="ten columns"),
+                ], className="row"),
             ], className = "six columns"),
 
         ], className="row"),
 
-        # Row contains the highest climber and biggest lost
+            # Row contains the highest climber and biggest lost
         html.Div([
 
             # Contains the highest climber
@@ -305,147 +356,129 @@ p4 = html.Div([],
 #
 
 
-if vertical:
-    app.layout = html.Div(
-        [
-            # components which contains the tab structure
-            html.Div(
-                [
-                    # image
-                    html.Div([elements.top_2000_img]),
+app.layout = html.Div(
+    [
+        # components which contains the tab structure
+        html.Div(
+            [
+                # image
+                html.Div([elements.top_2000_img]),
 
-                    # everything underneath the image
+                # everything underneath the image
+                html.Div([
+
+                    # Tabs element
+                    html.Div(
+                        [elements.tabs],
+                        style={
+                            "float": "left",
+                            "width": "100vw",
+                            "margin": "0 0 0 0",
+                            "clear": "both"
+                        },
+                        className="row one columns",
+                    ),
+
+                    # This Div contains the global parameters.
+                    # Position is currently fixed so that it floats with scrolling.
                     html.Div([
-
-                        # Tabs element
-                        html.Div(
-                            [elements.tabs],
+                        html.H6(['Genre'], style={"margin": "1rem 0 0 0"}),
+                        dcc.Dropdown(
+                            id="ddGenre",
+                            options=genre_options,
+                            value=["all genres"],
+                            multi=True,
                             style={
-                                "float": "left",
-                                "width": "100vw",
                                 "margin": "0 0 0 0",
-                                "clear": "both"
+                                "width": "100%",
                             },
-                            className="row one columns",
                         ),
 
-                        # This Div contains the global parameters.
-                        # Position is currently fixed so that it floats with scrolling.
-                        html.Div([
-                            html.H6(['Genre'], style={"margin":"1rem 0 0 0"}),
-                            dcc.Dropdown(
-                                id="ddGenre",
-                                options=genre_options,
-                                value=["all genres"],
-                                multi=True,
-                                style={
-                                    "margin": "0 0 0 0",
-                                    "width": "100%",
-                                },
-                            ),
-
-                            html.H6(['Artist'], style={"margin":"1rem 0 0 0"}),
-                            dcc.Dropdown(
-                                id="ddArtist",
-                                options=artist_options,
-                                value=["all artists"],
-                                multi=True,
-                                style={
-                                    "margin": "0 0 0 0",
-                                    "width": "100%",
-                                },
-                            ),
-
-                            html.H6(["Release Year"], style={"margin":"1rem 0 0 0"}),
-                            dcc.Dropdown(
-                                id="ddReleaseYear",
-                                options=releaseYear_options,
-                                value=["all release years"],
-                                multi=True,
-                                style={
-                                    "margin": "0 0 0 0",
-                                    "width": "100%",
-                                },
-                            )
-                        ],
+                        html.H6(['Artist'], style={"margin": "1rem 0 0 0"}),
+                        dcc.Dropdown(
+                            id="ddArtist",
+                            options=artist_options,
+                            value=["all artists"],
+                            multi=True,
                             style={
-                                "float": "left",
-                                "width": "18vw",
-                                "clear": "both",
-                                "margin": "0 0 75px 0",
-                                "position": "fixed",
-                                "bottom" : "10",
-                                # "left":"0",
-                                },
-                            className="row one columns"),
+                                "margin": "0 0 0 0",
+                                "width": "100%",
+                            },
+                        ),
 
-                    ], style={
-                        'borderRight': 'thin lightgrey solid',
-                        'height':'100vh'}
-                    )
+                        html.H6(["Release Year"], style={"margin": "1rem 0 0 0"}),
+                        dcc.Dropdown(
+                            id="ddReleaseYear",
+                            options=releaseYear_options,
+                            value=["all release years"],
+                            multi=True,
+                            style={
+                                "margin": "0 0 0 0",
+                                "width": "100%",
+                            },
+                        )
+                    ],
+                        style={
+                            "float": "left",
+                            "width": "18vw",
+                            "clear": "both",
+                            "margin": "0 0 75px 0",
+                            "position": "fixed",
+                            "bottom": "10",
+                            # "left":"0",
+                        },
+                        className="row one columns"),
 
-                ],
-                style={'width': '20vw',
-                       'float': 'left',
-                       # "border": "2px solid green",
-                       },
-                className="two columns",
-            ),
+                ], style={
+                    'borderRight': 'thin lightgrey solid',
+                    'height': '100vh'}
+                )
 
-            # tab_ouput
-            html.Div(
-                html.Div(id='tab-output',
-                         children=[p1,
-                                   p2,
-                                   p3,
-                                   p4]
-                         ),
-                style={'width': '78vw',
-                       'float': 'right', }
-            ),
+            ],
+            style={'width': '20vw',
+                   'float': 'left',
+                   # "border": "2px solid green",
+                   },
+            className="two columns",
+        ),
 
-            # # component which contains the 'tab output' aka the actual content
-            # html.Div(
-            #     [
-            #         html.Div(id='tab-output'),
-            #     ],
-            #     style={'width': '78vw',
-            #            'float': 'right',
-            #            }
-            # ),
-
-            # hidden component to store data
-            html.Div(id='_filtered_df_stored',
-                     # children=df.to_json(date_format='iso', orient="split"),
-                     style={'display': 'none'}),
-
-            # hidden component to store data
-            html.Div(id='_current_song_stored', style={'display': 'none'}),
-        ],
-        # className='offsets-dis-by-one column',
-        style={
-            'fontFamily': 'Sans-Serif',
-            'margin-left': '10px',
-            'margin-right': 'auto',
-        }
-    )
-else:
-    app.layout = html.Div(
-        [
-            html.H1('Dash Tabs component demo'),
-            dcc.Tabs(id="tabs", value=1,
-                     children=[
-                         dcc.Tab(label='Currently playing', value=1),
-                         dcc.Tab(label='Fun Facts', value=2),
-                         dcc.Tab(label='Advanced analytics', value=3),
-                         dcc.Tab(label='Lyrics analysis', value=4),
-                     ],
-                     vertical=vertical,
-                     style=tab_style(vertical),
+        # tab_ouput
+        html.Div(
+            html.Div(id='tab-output',
+                     children=[p1,
+                               p2,
+                               p3,
+                               p4]
                      ),
-            html.Div(id='tab-output', style={"margin-left": "50px"}),
-        ]
-    )
+            style={'width': '78vw',
+                   'float': 'right', }
+        ),
+
+        # # component which contains the 'tab output' aka the actual content
+        # html.Div(
+        #     [
+        #         html.Div(id='tab-output'),
+        #     ],
+        #     style={'width': '78vw',
+        #            'float': 'right',
+        #            }
+        # ),
+
+        # hidden component to store data
+        html.Div(id='_filtered_df_stored',
+                 # children=df.to_json(date_format='iso', orient="split"),
+                 style={'display': 'none'}),
+
+        # hidden component to store data
+        html.Div(id='_current_song_stored', style={'display': 'none'}),
+    ],
+    className='offsets-dis-by-one column',
+    style={
+        'fontFamily': 'Sans-Serif',
+        'margin-left': '10px',
+        'margin-right': 'auto',
+    }
+)
 
 
 @app.callback(Output("_current_song_stored", "children"),
@@ -459,7 +492,13 @@ def updateCurrentSong(song_title):
               [Input("_current_song_stored", "children")])
 def getAlbumImg(current_song):
     current_song = pd.read_json(current_song, orient="split")
-    return current_song["album_image"]
+    return current_song["album_image"].iloc[0]
+
+@app.callback([Output("bestArtistImg", "src")], #TODO Have to update this based on the filtered df rather than the _current_song_stored
+              [Input("_current_song_stored", "children")])
+def getArtistImg(current_song):
+    current_song = pd.read_json(current_song, orient="split")
+    return current_song["artist_image"].iloc[0]
 
 
 @app.callback(Output("songName", "children"),
@@ -512,6 +551,7 @@ def update_attributePlot(songname, attribute):
     return create_attributePlot(df, songname, attribute)
 
 
+
 # app.callback(Output("_filtered_df_stored", "children"),
 #             [Input("ddGenre", "value"),
 #              Input("ddArtist", "value"),
@@ -550,55 +590,6 @@ def display_content(tab_value):
     if tab_value ==4:
         return style_hidden, style_hidden, style_hidden, style_update
 
-
-# @app.callback(Output('tab-output', 'children'),
-#               [Input('tabs', 'value')])
-# def render_content(tab):
-#     if tab == 1:
-#         # return placeholder
-#         return elements.landing_page_2
-#     elif tab == 2:
-#         return elements.fun_facts_page
-#     elif tab == 3:
-#         return elements.advanced_page
-#     elif tab == 4:
-#         return placeholder
-#         return elements.lyrics_page
-
-
 if __name__ == '__main__':
     app.run_server(debug=True)
 
-
-
-
-
-html.Div([
-        dcc.Markdown(children=markdown_text),
-        dcc.Graph(
-            id='word-count-vs-year-all',
-            figure={
-                'data': [
-                    go.Scatter(
-                        y=df_lyrics[df_lyrics['Artist'] == i]['lyrics_word_count'],
-                        x=df_lyrics[df_lyrics['Artist'] == i]['Year'],
-                        text=df_lyrics[df_lyrics['Artist'] == i]['Title'],
-                        mode='markers',
-                        opacity=0.6,
-                        marker={
-                            'size': 10,
-                            'line': {'width': 0.5, 'color': 'white'}
-                        },
-                        name=i
-                    ) for i in sorted(df_lyrics.Artist.unique())
-                ],
-                'layout': go.Layout(
-                    yaxis={'type': 'log', 'title': 'number of words in song'},
-                    xaxis={'title': 'song release year'},
-                    margin={'l': 100, 'b': 40, 't': 10, 'r': 10},
-                    legend={'x': 1, 'y': 1},
-                    hovermode='closest'
-                )
-            }
-        ),
-    ])

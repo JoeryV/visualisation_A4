@@ -385,3 +385,17 @@ def get_track_sample(current_song):
     sample = sp.track(current_song['uri'].iloc[0])
     return sample['preview_url']
 
+def getBestArtistName(df):
+    return df.Artist.value_counts().index[0]
+
+def getBestArtistWon(df):
+    return str(df.Artist.value_counts()[0])
+
+def getBestSongTitle(df):
+    return df.iloc[(df.iloc[:, 4:24] == 1).sum(axis=1).index[0]].Title
+
+def getBestSongArtist(df):
+    return df.iloc[(df.iloc[:,4:24]==1).sum(axis=1).index[0]].Artist
+
+def getBestSongWon(df):
+    return str((df.iloc[:,4:24]==1).sum(axis=1)[0])
