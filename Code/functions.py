@@ -1,7 +1,9 @@
+import pandas as pd
 import plotly.graph_objs as go
 import dash_html_components as html
 
-from time_series import get_source, get_values, get_time_series_layout_params
+from sklearn.cluster import KMeans
+from Code.time_series import get_source, get_values
 
 
 def tab_style(vertical=True):
@@ -144,6 +146,62 @@ def generate_adv_analytic_2(df):
     return (fig)
 
 
+def pattern_clustering(dataframe, n_clusters=10):
+    """ Clusters patterns, adds column to the dataframe containing the cluster number of the respective row"""
+    ## Clean dataframe
+    years = [str(i) for i in range(1999, 2019)]
+    for i in years:
+        dataframe.loc[dataframe[i] == 0, i] = 2500
+    dataframe = dataframe[years]
+
+    kmeans = KMeans(n_clusters=n_clusters)
+    kmeans.fit(dataframe)
+    y_kmeans = kmeans.predict(dataframe)
+    dataframe['cluster'] = y_kmeans
+    return (dataframe)
+
+
+def generate_left_plot(dataframe, n_clusters=10):
+    means = {}
+    for cluster in range(n_clusters):
+        temp = dataframe[dataframe['cluster'] == cluster].drop('cluster', axis=1)
+
+        ## Keuze: 2500 voor NaN values
+        means[cluster] = temp.mean()
+
+    data = [go.Scatter(x=means[0].keys(), y=means[cluster].values, name='Cluster {}'.format(cluster),
+                       ) for cluster in range(n_clusters)]
+    layout = go.Layout(yaxis=dict(autorange='reversed'))
+    fig = go.Figure(data=data, layout=layout)
+    return (fig)
+
+
+def generate_right_plot(df, dataframe, n_clusters=10):
+    temp = df[df.index.isin(dataframe.index)][
+        ['speechiness', 'energy', 'danceability', 'valence', 'liveness', 'instrumentalness', 'acousticness']]
+
+    result = pd.concat([dataframe['cluster'], temp], axis=1, join='inner')
+
+    means_spider = {}
+    for cluster in range(n_clusters):
+        temp = result[result['cluster'] == cluster].drop('cluster', axis=1)
+        means_spider[cluster] = temp.mean()
+    dataframe = pd.DataFrame(means_spider).T
+
+    features = ['danceability', 'energy', 'speechiness', 'acousticness',
+                'instrumentalness', 'liveness', 'valence']
+
+    data = [go.Scatterpolar(
+        r=dataframe.iloc[i][features].values,
+        theta=features, name='Cluster {}'.format(i),
+        fill='toself') for i in range(len(dataframe))]
+
+    #     layout = go.Layout( polar=dict( radialaxis=dict( visible=True, range=[0, 1]  )  ),  paper_bgcolor='#FAFAF, plot_bgcolor='#FAFAFA', showlegend=False )
+
+    fig = go.Figure(data=data)  # , layout=layout)
+    return fig
+
+
 # Vincent functions
 #TODO vincent's functions need to be updated by song (radar), song & years (rank_plot), song & attribute & years
 # (attribute vs time), additionally it should work with comparing multiple songs
@@ -196,6 +254,7 @@ def create_radar(currentSong):
 
     fig = go.Figure(data=data, layout=layout)
     return fig
+
 
 def create_rank_plot(df, song, years):
     year_list = ['1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006',
@@ -369,7 +428,8 @@ def create_rank_plot(df, song, years):
 
 import spotipy
 import spotipy.util as util
-import token_files as tf
+from Code import token_files as tf
+
 
 def get_track_sample(current_song):
     client_id = tf.SPOTIPY_CLIENT_ID
@@ -385,17 +445,71 @@ def get_track_sample(current_song):
     sample = sp.track(current_song['uri'].iloc[0])
     return sample['preview_url']
 
-def getBestArtistName(df):
+
+# SJOERD FUNCTIONS
+# def getBestArtistName(df):
+#     return df.Artist.value_counts().index[0]
+#
+# def getBestArtistWon(df):
+#     return str(df.Artist.value_counts()[0])
+#
+# def getBestSongTitle(df):
+#     return df.iloc[(df.iloc[:, 4:24] == 1).sum(axis=1).index[0]].Title
+#
+# def getBestSongArtist(df):
+#     return df.iloc[(df.iloc[:,4:24]==1).sum(axis=1).index[0]].Artist
+#
+# def getBestSongWon(df):
+#     return str((df.iloc[:,4:24]==1).sum(axis=1)[0])
+#
+# def getHighestClimberName(df):
+#     return df.iloc[df.iloc[:, 4:24][
+#         (df.iloc[:, 4:24].diff(axis=1) == df.iloc[:, 4:24].diff(axis=1).min().min())
+#             .sum(axis=1) > 0].index].Artist + "-" + df.iloc[df.iloc[:, 4:24][
+#         (df.iloc[:, 4:24].diff(axis=1) == df.iloc[:, 4:24].diff(axis=1).min().min())
+#             .sum(axis=1) > 0].index].Title
+#
+# def getHighestClimberNr(df):
+#     return str(int(abs(df.iloc[:, 4:24].diff(axis=1).min().min())))
+#
+# def getBiggestLosterName(df):
+#     return df.iloc[df.iloc[:, 4:24][
+#         (df.iloc[:, 4:24].diff(axis=1) == df.iloc[:, 4:24].diff(axis=1).max().max())
+#             .sum(axis=1) > 0].index].Artist + "-" + df.iloc[df.iloc[:, 4:24][
+#         (df.iloc[:, 4:24].diff(axis=1) == df.iloc[:, 4:24].diff(axis=1).max().max())
+#             .sum(axis=1) > 0].index].Title
+#
+# def getBiggestLosterNr(df):
+#     return str(int(abs(df.iloc[:, 4:24].diff(axis=1).max().max())))
+def best_artist_name(df):
     return df.Artist.value_counts().index[0]
 
-def getBestArtistWon(df):
+def best_artist_count(df):
     return str(df.Artist.value_counts()[0])
 
-def getBestSongTitle(df):
-    return df.iloc[(df.iloc[:, 4:24] == 1).sum(axis=1).index[0]].Title
+def best_rated_song(df):
+    return df[(df.iloc[:,5:24].replace(0,2001).min().min()==df.iloc[:,5:24]).sum(axis=1)>0].reset_index().iloc[0].Artist + " - " + df[(df.iloc[:,5:24].replace(0,2001).min().min()==df.iloc[:,5:24]).sum(axis=1)>0].reset_index().iloc[0].Title
 
-def getBestSongArtist(df):
-    return df.iloc[(df.iloc[:,4:24]==1).sum(axis=1).index[0]].Artist
+def best_rated_song2(df):
+    return df[(df.iloc[:,5:24].replace(0,2001).min().min()==df.iloc[:,5:24]).sum(axis=1)>0].reset_index().iloc[0].Title
 
-def getBestSongWon(df):
-    return str((df.iloc[:,4:24]==1).sum(axis=1)[0])
+def best_rated_count(df):
+    return str(df.iloc[:,5:24].replace(0,2001).min().min())
+
+def highest_climber(df):
+    return df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].min().min()).sum(axis=1)>=1].Artist + '-' +  df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].min().min()).sum(axis=1)>=1].Title
+
+def highest_climber_count(df):
+    return str(int(abs(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].min().min())))
+
+def highest_climber_title(df):
+    return df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].min().min()).sum(axis=1)>=1].Title
+
+def biggest_loser(df):
+    return df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].max().max()).sum(axis=1)>=1].Artist + '-' + df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].max().max()).sum(axis=1)>=1].Title
+
+def biggest_loser_count(df):
+    return str(int(abs(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].max().max())))
+
+def loser_title(df):
+    return df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].max().max()).sum(axis=1)>=1].Title

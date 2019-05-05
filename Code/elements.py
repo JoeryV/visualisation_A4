@@ -1,9 +1,5 @@
 import dash_core_components as dcc
-import dash_html_components as html
-import plotly.graph_objs as go
-from functions import *
-import load_data
-from copy import copy
+from Code.functions import *
 
 speedup = True
 vertical = True

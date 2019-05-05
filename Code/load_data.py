@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 def load_df_audio_feats():
-    df_audio_feats = pd.read_csv("./Data/top_2000_with_audio_features.csv")
+    df_audio_feats = pd.read_csv("../Data/top_2000_with_audio_features.csv")
     df_audio_feats.drop("Unnamed: 0",axis=1,inplace=True)
     df_audio_feats.Year = df_audio_feats.Year.astype(str)
     df_audio_feats.replace(0,2001,inplace=True)
