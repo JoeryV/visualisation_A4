@@ -1,9 +1,14 @@
+import spotipy
 import pandas as pd
+import spotipy.util as util
 import plotly.graph_objs as go
 import dash_html_components as html
 
+from copy import copy
 from sklearn.cluster import KMeans
+from Code import token_files as tf
 from Code.time_series import get_source, get_values
+
 
 
 def tab_style(vertical=True):
@@ -71,94 +76,72 @@ def generate_year_options(df, col='Year'):
 
 
 # Casper functions
-def generate_adv_analytic_1(df):
-    years = [str(i) for i in range(1999,2019)]
-    data = [go.Bar(visible=False,
-                 name = 'Year = '+str(year),
-                x = list(df[df[year] > 0].Year.value_counts()[df[df[year] > 0].Year.value_counts()>1].index),
-                y = list(df[df[year] > 0].Year.value_counts()[df[df[year] > 0].Year.value_counts()>1].values)
-                    ) for year in years]
-    data[19]['visible'] = True
+def generate_adv_analytic_1(df, year):
+    year = str(year)
+    count_per_publ_year = df.loc[df[year] > 0, "Year"].value_counts().sort_index()
 
-    steps = []
-    for i in range(len(data)):
-        step = dict( method = 'restyle',  args = ['visible', [False] * len(data)],  label= i+1999 )
-        step['args'][1][i] = True # Toggle i'th trace to "visible"
-        steps.append(step)
+    data = [go.Bar(
+        name="Based on Top2000 year {}".format(year),
+        x=list(count_per_publ_year[count_per_publ_year > 0].index),
+        y=list(count_per_publ_year[count_per_publ_year > 0].values))
+    ]
 
-    sliders = [dict( active = 19, currentvalue = {"prefix": "Year: "}, pad = {"t": 50}, steps = steps )]
-    layout = go.Layout(sliders=sliders,
-                       xaxis=dict(range=[1938,2020]),
-                       yaxis=dict(range=[0,100]),
-                       title='Number of songs per Publication Year',
-                       paper_bgcolor='#FAFAFA',
-                       plot_bgcolor='#FAFAFA',
-                       )
+    layout = go.Layout(
+        # xaxis=dict(range=[1938,2018]),
+        # yaxis=dict(range=[0,100]),
+        # title='Number of songs per Publication Year',
+        paper_bgcolor='#FAFAFA',
+        plot_bgcolor='#FAFAFA',
+        margin=go.layout.Margin(
+            l=0,
+            r=0,
+            b=0,
+            t=0
+        )
+    )
+
     fig = dict(data=data, layout=layout)
-    return(fig)
+    return fig
 
-def generate_adv_analytic_2(df):
-    var_dic = {}
-    columns = ['danceability', 'energy', 'key', 'loudness', 'duration_ms',
-               'speechiness', 'acousticness', 'instrumentalness', 'liveness',
-               'valence', 'tempo']
-    # old code for columns: [i for i in df.columns[24:28].append(df.columns[40:41]).append(df.columns[29:35])]
 
-    for column in columns:
-        df['AVG_' + column] = df.groupby('Year')[column].transform('mean')
-        #     df['AVG_'+column] = round(df['AVG_'+column] / 1000)
-        temp = df.groupby(['Year', 'AVG_' + column]).size().reset_index().rename(columns={0: 'count'})
-        if column == columns[0]:
-            var_dic['trace_' + column] = go.Bar(x=list(temp.Year.values),
-                                                y=list(temp['AVG_' + column].values),
-                                                visible=True,
-                                                name=column)  ############ color='#ff474c', alpha=0.5
-        else:
-            var_dic['trace_' + column] = go.Bar(x=list(temp.Year.values),
-                                                y=list(temp['AVG_' + column].values),
-                                                visible=False,
-                                                name=column)  ############ color='#ff474c', alpha=0.5
-
-    data = [var_dic['trace_' + column] for column in columns]
-
-    abc = []
-    for i in range(len(columns)):
-        a = [False for i in range(len(columns))]
-        a[i] = True
-        abc.append(a)
-
-    updatemenus = list([
-        dict(buttons=list([
-            dict(label=columns[i],
-                 method='update',
-                 args=[{'visible': abc[i]},
-                       {'title': 'Publication year averages for {}'.format(columns[i]),
-                        'annotations': []}]) for i in range(len(columns))]))])
-
-    layout = dict(title='Publication year averages',
-                  showlegend=False,
-                  updatemenus=updatemenus,
-                  paper_bgcolor='#FAFAFA',
-                  plot_bgcolor='#FAFAFA',
-                  )
+def generate_adv_analytic_2(df, attribute):
+    df['AVG_' + attribute] = df.groupby('Year')[attribute].transform('mean')
+    temp = df.groupby(['Year', 'AVG_' + attribute]).size().reset_index().rename(columns={0: 'count'})
+    data = [go.Bar(x=list(temp.Year.values),
+                   y=list(temp['AVG_' + attribute].values),
+                   visible=True,
+                   name=attribute)
+            ]
+    layout = dict(  # title='Publication year averages',
+        showlegend=False,
+        paper_bgcolor='#FAFAFA',
+        plot_bgcolor='#FAFAFA',
+        margin=go.layout.Margin(
+            l=0,
+            r=0,
+            b=0,
+            t=0
+        )
+    )
 
     fig = dict(data=data, layout=layout)
     return (fig)
-
 
 def pattern_clustering(dataframe, n_clusters=10):
     """ Clusters patterns, adds column to the dataframe containing the cluster number of the respective row"""
     ## Clean dataframe
     years = [str(i) for i in range(1999, 2019)]
-    for i in years:
-        dataframe.loc[dataframe[i] == 0, i] = 2500
-    dataframe = dataframe[years]
+    tmp_df = copy(dataframe)
+    for year in years:
+        tmp_df.loc[tmp_df[year] == 0, year] = 2500
+        tmp_df.loc[tmp_df[year].isnull(), year] = 2500
+    tmp_df = tmp_df[years]
 
     kmeans = KMeans(n_clusters=n_clusters)
-    kmeans.fit(dataframe)
-    y_kmeans = kmeans.predict(dataframe)
-    dataframe['cluster'] = y_kmeans
-    return (dataframe)
+    kmeans.fit(tmp_df)
+    y_kmeans = kmeans.predict(tmp_df)
+    tmp_df.loc[:, 'cluster'] = y_kmeans
+    return (tmp_df)
 
 
 def generate_left_plot(dataframe, n_clusters=10):
@@ -171,7 +154,11 @@ def generate_left_plot(dataframe, n_clusters=10):
 
     data = [go.Scatter(x=means[0].keys(), y=means[cluster].values, name='Cluster {}'.format(cluster),
                        ) for cluster in range(n_clusters)]
-    layout = go.Layout(yaxis=dict(autorange='reversed'))
+    layout = go.Layout(
+        yaxis=dict(autorange='reversed'),
+        paper_bgcolor='#FAFAFA',
+        plot_bgcolor='#FAFAFA',
+    )
     fig = go.Figure(data=data, layout=layout)
     return (fig)
 
@@ -195,10 +182,15 @@ def generate_right_plot(df, dataframe, n_clusters=10):
         r=dataframe.iloc[i][features].values,
         theta=features, name='Cluster {}'.format(i),
         fill='toself') for i in range(len(dataframe))]
+    layout = go.Layout(
+        paper_bgcolor='#FAFAFA',
+        plot_bgcolor='#FAFAFA',
+    )
+
 
     #     layout = go.Layout( polar=dict( radialaxis=dict( visible=True, range=[0, 1]  )  ),  paper_bgcolor='#FAFAF, plot_bgcolor='#FAFAFA', showlegend=False )
 
-    fig = go.Figure(data=data)  # , layout=layout)
+    fig = go.Figure(data=data, layout=layout)
     return fig
 
 
@@ -210,7 +202,6 @@ def create_attributePlot(df, song, attribute):
     song = song[0]
     idx = df.index[df['Title'] == song].tolist()[0]
     source = get_source(attribute)
-    print(idx, attribute, source)
     y_vals, time = get_values(df, idx, source, attribute)
 
 
@@ -297,140 +288,7 @@ def create_rank_plot(df, song, years):
     return fig
 
 
-# def update_plots(df, song="Bohemian Rhapsody", attribute="loudness_start", years=("1999", "2018")):
-#     attributes = ['loudness_start', 'tempo', 'key', 'mode', 'time_signature']
-#     features = ['danceability', 'energy', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence']
-#     year_list = ['1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010',
-#                  '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018']
-#
-#
-#     idx = df.index[df['Title'] == song].tolist()[0]
-#     start, stop = year_list.index(years[0]), year_list.index(years[1])
-#     rankings = df.loc[idx, year_list].values[start:stop + 1]
-#
-#     source = get_source(attribute)
-#     y_vals, time = get_values(df, idx, source, attribute)
-#
-#     # Create a trace
-#     attribute_trace = go.Scatter(
-#         x=time,
-#         y=y_vals
-#     )
-#
-#     # Create a trace
-#     rank_trace = go.Scatter(
-#         x=year_list[start: stop + 1],
-#         y=rankings,
-#         mode='lines+markers',
-#         xaxis='x2',
-#         yaxis='y2'
-#     )
-#
-#     radar_trace = go.Scatterpolar(
-#         r=df.loc[idx, features].values,
-#         theta=features,
-#         fill='toself'
-#     )
-#
-#     data = [attribute_trace, rank_trace, radar_trace]
-#
-#     xaxis, yaxis = get_time_series_layout_params(attribute, xdomain=[0, 1], ydomain=[0, 0.25])
-#
-#     layout = dict(
-#         showlegend=False,
-#         autosize=False,  # Allows for custom-sized plot
-#         width=900,  # Control width of OVERALL plot
-#         height=1000,  # Control height of OVERALL plot
-#
-#         # Axes for Attribute plot (time series), defined in line 32
-#         xaxis=xaxis,
-#         yaxis=yaxis,
-#
-#         # Axes for Rank plot
-#         xaxis2=dict(
-#             title='Year',
-#             domain=[0, 1],
-#             anchor='y2'
-#         ),
-#         yaxis2=dict(
-#             title='Ranking',
-#             #             range=[2000, 1],
-#             domain=[0.4, 0.65]),
-#
-#         # Axes for Radar Plot
-#         polar=dict(
-#
-#             # This domain controls the position of the radar plot.  Vals must be between 0 and 1
-#             domain=dict(
-#                 x=[0, 0.45],
-#                 y=[0.7, 0.95]
-#             ),
-#
-#             # Controls min and max values for radar plot
-#             radialaxis=dict(
-#                 visible=True,
-#                 range=[0, 1]
-#             ),
-#
-#             angularaxis=dict(
-#                 thetaunit="radians"
-#             )
-#         ),
-#
-#         annotations=[
-#             dict(
-#                 x=0.5,
-#                 y=0.275,
-#                 text='Attribute vs. Time',
-#                 xref="paper",
-#                 yref="paper",
-#                 xanchor="center",
-#                 yanchor="bottom",
-#                 showarrow=False,
-#                 font={
-#                     'size': 16
-#                 }
-#             ),
-#             dict(
-#                 x=0.5,
-#                 y=0.675,
-#                 text='Rank by Year',
-#                 xref="paper",
-#                 yref="paper",
-#                 xanchor="center",
-#                 yanchor="bottom",
-#                 showarrow=False,
-#                 font={
-#                     'size': 16
-#                 }
-#             ),
-#             dict(
-#                 x=0.45 / 2,
-#                 y=1,
-#                 text='Audio Features',
-#                 xref="paper",
-#                 yref="paper",
-#                 xanchor="center",
-#                 yanchor="bottom",
-#                 showarrow=False,
-#                 font={
-#                     'size': 16
-#                 }
-#             )
-#         ]
-#     )
-#
-#     fig = dict(data=data, layout=layout)
-#     return fig
-
-
 # spotify functions
-
-import spotipy
-import spotipy.util as util
-from Code import token_files as tf
-
-
 def get_track_sample(current_song):
     client_id = tf.SPOTIPY_CLIENT_ID
     client_secret = tf.SPOTIPY_CLIENT_SECRET
@@ -506,7 +364,7 @@ def highest_climber_title(df):
     return df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].min().min()).sum(axis=1)>=1].Title
 
 def biggest_loser(df):
-    return df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].max().max()).sum(axis=1)>=1].Artist + '-' + df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].max().max()).sum(axis=1)>=1].Title
+    return df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].max().max()).sum(axis=1)>=1].Artist + ' - ' + df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].max().max()).sum(axis=1)>=1].Title
 
 def biggest_loser_count(df):
     return str(int(abs(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].max().max())))

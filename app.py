@@ -21,25 +21,31 @@ from textwrap import dedent
 from dash.dependencies import Input, Output
 
 
-df = load_data.load_file_100()
-df3 = pattern_clustering(df)
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+config= {'displayModeBar': False, 'showLink' : False}
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 app.scripts.config.serve_locally = True
-
 
 # global variables
 app.title = "Top 2000"
 vertical = True
+
+
+df = load_data.load_file_100()
+df3 = pattern_clustering(df)
 attributes = ['tempo', 'key', 'mode', 'time_signature'] #TODO loadness start is not in the new df. Does Vincent want it? If so, add it in,
 genre_options = create_dd_options(df['primary_genre'].dropna().unique())
 genre_options.append({"label": "all genres", "value": ""})
-
 artist_options = create_dd_options(df["Artist"].dropna().unique())
 artist_options.append({"label": "all artists", "value": ""})
 
 releaseYear_options = create_dd_options(df["Year"].dropna().unique())
 releaseYear_options.append({"label": "all release years", "value": ""})
+
+p3_col_options = ['danceability', 'energy', 'key', 'loudness', 'duration_ms',
+                  'speechiness', 'acousticness', 'instrumentalness', 'liveness',
+                  'valence', 'tempo']
+
 
 placeholder = html.Div([
     html.H3('Tab content 1'),
@@ -66,7 +72,7 @@ p1 = html.Div([
         #TODO update this dropdown based on the global params
         html.Div([
             dcc.Dropdown(
-                id="dd_song",
+                id="dd_song_p1",
                 options=create_dd_options(df['Title']),
                 value=["Bohemian Rhapsody"],
                 multi=True,
@@ -101,7 +107,7 @@ p1 = html.Div([
         # The RangeSlider to select the years
         html.Div([
             dcc.RangeSlider(
-                id="yearRange",
+                id="yearRange_p1",
                 min=1999,
                 max=2018,
                 marks=generate_year_options(df),
@@ -352,32 +358,110 @@ p2 = html.Div([
 
 p3 = html.Div([
     Header("Advanced Analytics"),
+
+
     html.Div([
-        html.Div([dcc.Markdown(dedent('''Add introductory text'''))]),
+        html.Div([html.H6(children="Inspect attribute: ")], className="three columns"),
+
+        # TODO set proper default value
+         html.Div([
+             dcc.Dropdown(
+                 id="dd_song_p3",
+                 options=create_dd_options(p3_col_options),
+                 value="danceability",
+                 multi=False,
+                 style={"width": "80%"},
+             ),
+         ], className="nine columns"),
+    ], className="row twelve columns"),
+
+    html.Div([
+        html.Div([html.H6(children="Top2000 Year: ")], style={"padding": "20 0 0 100"}, className="three columns"),
+
+        # TODO adapt this to the proper years
+        # The RangeSlider to select the years
         html.Div([
-            dcc.Graph(id='historical_plot', figure=generate_adv_analytic_1(df))],
-            style={'width': '45%', 'display': 'inline-block', 'float': 'left',
-                   'border': 'thin lightgrey solid'}),  # , 'padding': '10 10 10 10'
+            dcc.Slider(
+                id="yearSlider",
+                min=1999,
+                max=2018,
+                marks=generate_year_options(df),
+                step=1,
+                value=2018,
+                updatemode='drag',
+            )
+        ], style={"width": "60%"}, className="nine columns")
+    ], className="row twelve columns"),
+
+html.Div([
+
+        # Number of songs per publication year
         html.Div([
-            dcc.Graph(id='other_plot', figure=generate_adv_analytic_2(df))],
-            style={'width': '45%', 'display': 'inline-block', 'float': 'right',
-                   'border': 'thin lightgrey solid', 'padding': '10 10 10 10'}),  # className="six columns"
-    ]),
+            get_subheader("Number of songs per publication year", size=3, className="gs-header gs-text-header"),
+
+            html.Div([
+                dcc.Graph(id='historical_plot', #TODO Have to update this figure based on the slider on same page
+                          figure=generate_adv_analytic_1(df, 2018),
+                          config=config,
+                          style={"margin": "0 0 0 0", "width": "100%"},
+                )
+            ]),
+        ], className="six columns"),
+
+        # Publication year averages
+        html.Div([
+                get_subheader("Publication year averages", size=3, className="gs-header gs-text-header"),
+
+                html.Div([
+                    dcc.Graph(id='other_plot',
+                              figure=generate_adv_analytic_2(df, 'danceability'),
+                              config=config,
+                              style={"margin": "0 0 0 0", 'width': '100%'},
+                              )
+                ]),
+            ], className="six columns")
+
+    ], className="row twelve columns"),
+
+
+
+
     html.Div([
         get_subheader('Pattern Analysis', size=4, className="gs-header gs-text-header"),
         html.Div([dcc.Markdown(
             dedent('''Introduction/exlpanation to come. Possibly also add input for number of clusters'''))]),
-        html.Div([
-            dcc.Graph(id='left_plot', figure=generate_left_plot(df3))],
-            style={'width': '45%', 'display': 'inline-block', 'float': 'left',
-                   'border': 'thin lightgrey solid', 'padding': '10 10 1=0 10'}),
-
-        html.Div([
-            dcc.Graph(id='right_plot', figure=generate_right_plot(df, df3))],
-            style={'width': '45%', 'display': 'inline-block', 'float': 'right',
-                   'border': 'thin lightgrey solid'}),  # , 'padding': '10 10 10 10'
-
     ], className='row twelve columns'),
+
+    html.Div([
+            html.Div([
+                dcc.Graph(id='left_plot',
+                          figure=generate_left_plot(df3),
+                          style={"margin": "0 0 0 0", 'width': '100%'},
+                          ),
+            ], className="six columns"),
+                # style={'width': '45%', 'display': 'inline-block', 'float': 'left',
+                #        'border': 'thin lightgrey solid', 'padding': '10 10 1=0 10'}
+
+            html.Div([
+                dcc.Graph(id='right_plot',
+                          figure=generate_right_plot(df, df3),
+                          style={"margin": "0 0 0 0", 'width': '100%'},
+                          )
+            ], className="six columns")
+            # style={'width': '45%', 'display': 'inline-block', 'float': 'right',
+            #            'border': 'thin lightgrey solid'}),  # , 'padding': '10 10 10 10'
+
+        ], className="row twelve columns"),
+        # html.Div([
+        #     dcc.Graph(id='left_plot', figure=generate_left_plot(df3))],
+        #     style={'width': '45%', 'display': 'inline-block', 'float': 'left',
+        #            'border': 'thin lightgrey solid', 'padding': '10 10 1=0 10'}),
+
+        # html.Div([
+        #     dcc.Graph(id='right_plot', figure=generate_right_plot(df, df3))],
+        #     style={'width': '45%', 'display': 'inline-block', 'float': 'right',
+        #            'border': 'thin lightgrey solid'}),  # , 'padding': '10 10 10 10'
+
     html.Div([dcc.Markdown(
         dedent('''Also here to-do: add table which shows songs from the in the left image selected cluster(s)''')), ],
              style={'display': 'inline-block', 'float': 'bottom'})
@@ -539,7 +623,7 @@ app.layout = html.Div(
 
 
 @app.callback(Output("_current_song_stored", "children"),
-              [Input("dd_song", "value")])
+              [Input("dd_song_p1", "value")])
 def updateCurrentSong(song_title):
     current_song = df.loc[df["Title"] == song_title[0]]
     return current_song.to_json(date_format="iso", orient="split")
@@ -583,8 +667,8 @@ def playSong(current_song):
 
 @app.callback(Output("rankPlot", "figure"),
               [#Input("_filtered_df_stored", "children"),
-               Input("dd_song", "value"),
-               Input("yearRange", "value"),
+               Input("dd_song_p1", "value"),
+               Input("yearRange_p1", "value"),
                ])
 def update_rankplot(songname, years): #df,
     # df = pd.read_json(df, orient="split")
@@ -599,7 +683,7 @@ def update_radarplot(current_song):
 
 
 @app.callback(Output("attributePlot", "figure"),
-              [Input("dd_song", "value"),
+              [Input("dd_song_p1", "value"),
                Input("dd_attribute", "value"),
                ])
 def update_attributePlot(songname, attribute):
@@ -656,6 +740,17 @@ def getArtistImage(df):
 def highest_climber_(df):
     df = pd.read_json(df, orient="split")
     return highest_climber(df),highest_climber_count(df), biggest_loser(df), biggest_loser_count(df), best_rated_count(df), best_rated_song(df), best_artist_count(df), best_artist_name(df)
+
+
+@app.callback(Output("historical_plot", "figure"),
+              [Input("yearSlider", "value")])
+def update_historical_plot(year_value):
+    return generate_adv_analytic_1(df, year_value)
+
+@app.callback(Output("other_plot", "figure"),
+              [Input("dd_song_p3", "value")])
+def update_historical_plot(attribute_value):
+    return generate_adv_analytic_2(df, attribute_value)
 
 
 @app.callback([Output("tab_id_1", "style"),
