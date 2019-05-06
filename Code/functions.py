@@ -5,6 +5,7 @@ import plotly.graph_objs as go
 import dash_html_components as html
 
 from copy import copy
+from operator import itemgetter
 from sklearn.cluster import KMeans
 from Code import token_files as tf
 from Code.time_series import get_source, get_values
@@ -93,9 +94,9 @@ def generate_adv_analytic_1(df, year):
         paper_bgcolor='#FAFAFA',
         plot_bgcolor='#FAFAFA',
         margin=go.layout.Margin(
-            l=0,
-            r=0,
-            b=0,
+            l=10,
+            r=10,
+            b=20,
             t=0
         )
     )
@@ -117,9 +118,9 @@ def generate_adv_analytic_2(df, attribute):
         paper_bgcolor='#FAFAFA',
         plot_bgcolor='#FAFAFA',
         margin=go.layout.Margin(
-            l=0,
-            r=0,
-            b=0,
+            l=10,
+            r=30,
+            b=20,
             t=0
         )
     )
@@ -304,70 +305,117 @@ def get_track_sample(current_song):
     return sample['preview_url']
 
 
-# SJOERD FUNCTIONS
-# def getBestArtistName(df):
-#     return df.Artist.value_counts().index[0]
-#
-# def getBestArtistWon(df):
-#     return str(df.Artist.value_counts()[0])
-#
-# def getBestSongTitle(df):
-#     return df.iloc[(df.iloc[:, 4:24] == 1).sum(axis=1).index[0]].Title
-#
-# def getBestSongArtist(df):
-#     return df.iloc[(df.iloc[:,4:24]==1).sum(axis=1).index[0]].Artist
-#
-# def getBestSongWon(df):
-#     return str((df.iloc[:,4:24]==1).sum(axis=1)[0])
-#
-# def getHighestClimberName(df):
-#     return df.iloc[df.iloc[:, 4:24][
-#         (df.iloc[:, 4:24].diff(axis=1) == df.iloc[:, 4:24].diff(axis=1).min().min())
-#             .sum(axis=1) > 0].index].Artist + "-" + df.iloc[df.iloc[:, 4:24][
-#         (df.iloc[:, 4:24].diff(axis=1) == df.iloc[:, 4:24].diff(axis=1).min().min())
-#             .sum(axis=1) > 0].index].Title
-#
-# def getHighestClimberNr(df):
-#     return str(int(abs(df.iloc[:, 4:24].diff(axis=1).min().min())))
-#
-# def getBiggestLosterName(df):
-#     return df.iloc[df.iloc[:, 4:24][
-#         (df.iloc[:, 4:24].diff(axis=1) == df.iloc[:, 4:24].diff(axis=1).max().max())
-#             .sum(axis=1) > 0].index].Artist + "-" + df.iloc[df.iloc[:, 4:24][
-#         (df.iloc[:, 4:24].diff(axis=1) == df.iloc[:, 4:24].diff(axis=1).max().max())
-#             .sum(axis=1) > 0].index].Title
-#
-# def getBiggestLosterNr(df):
-#     return str(int(abs(df.iloc[:, 4:24].diff(axis=1).max().max())))
 def best_artist_name(df):
     return df.Artist.value_counts().index[0]
+
 
 def best_artist_count(df):
     return str(df.Artist.value_counts()[0])
 
+
 def best_rated_song(df):
     return df[(df.iloc[:,5:24].replace(0,2001).min().min()==df.iloc[:,5:24]).sum(axis=1)>0].reset_index().iloc[0].Artist + " - " + df[(df.iloc[:,5:24].replace(0,2001).min().min()==df.iloc[:,5:24]).sum(axis=1)>0].reset_index().iloc[0].Title
+
 
 def best_rated_song2(df):
     return df[(df.iloc[:,5:24].replace(0,2001).min().min()==df.iloc[:,5:24]).sum(axis=1)>0].reset_index().iloc[0].Title
 
+
 def best_rated_count(df):
     return str(df.iloc[:,5:24].replace(0,2001).min().min())
+
 
 def highest_climber(df):
     return df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].min().min()).sum(axis=1)>=1].Artist + '-' +  df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].min().min()).sum(axis=1)>=1].Title
 
+
 def highest_climber_count(df):
     return str(int(abs(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].min().min())))
+
 
 def highest_climber_title(df):
     return df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].min().min()).sum(axis=1)>=1].Title
 
+
 def biggest_loser(df):
     return df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].max().max()).sum(axis=1)>=1].Artist + ' - ' + df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].max().max()).sum(axis=1)>=1].Title
+
 
 def biggest_loser_count(df):
     return str(int(abs(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].max().max())))
 
+
 def loser_title(df):
     return df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].max().max()).sum(axis=1)>=1].Title
+
+
+## NIMA FUNCTIONS
+def create_offensive_words_plot(dict_offensive_words, input_value):
+    data = []
+
+    for off_word in input_value:
+        trace = go.Bar(x=[item[2] for item in dict_offensive_words[off_word]],
+                       y=[item[3] for item in dict_offensive_words[off_word]],
+                       name=off_word)
+        data.append(trace)
+        # data.append({'x': [item[2] for item in dict_offensive_words[off_word]],
+        #                            'y': [item[3] for item in dict_offensive_words[off_word]], 'type': 'bar',
+        #                            'name': off_word})
+
+    layout = go.Layout(
+        paper_bgcolor='#FAFAFA',
+        plot_bgcolor='#FAFAFA',
+        # showlegend=False,
+        margin=go.layout.Margin(
+            l=25,
+            r=10,
+            b=25,
+            t=0
+        )
+    )
+
+    fig = {"data":data, "layout":layout}
+    return fig
+
+
+def create_search_words_plot(df_merged_have_lyrics, input_value):
+    data = []
+    list_of_artists = df_merged_have_lyrics.Artist.unique().tolist()
+
+    for element in input_value:
+        list_of_apperance = []
+
+        for name in list_of_artists:
+            temp_df = df_merged_have_lyrics[df_merged_have_lyrics.Artist == name]
+            for item in temp_df[['Lyrics_cleaned', 'Title', 'Year']].values:
+                if element.lower() in item[0].lower():
+                    list_of_apperance.append([element, item[2], name, item[1], item[0].lower().count(element.lower())])
+        list_of_apperance.sort(key=itemgetter(1))
+
+        find_word_appearance_list = [item[1:] for item in list_of_apperance]
+        data.append({'x': [item[0] for item in find_word_appearance_list],
+                                   'y': [item[3] for item in find_word_appearance_list], 'type': 'bar', 'name': element}
+                                  )
+    layout = go.Layout(
+        paper_bgcolor='#FAFAFA',
+        plot_bgcolor='#FAFAFA',
+        # showlegend=False,
+        margin=go.layout.Margin(
+            l=25,
+            r=10,
+            b=25,
+            t=0
+        )
+    )
+
+    figure = {'data': data, "layout": layout}
+    return figure
+        # (html.Div([dcc.Markdown(children=markdown_text),
+        #               dcc.Graph(
+        #                   id='Graph1',
+        #                   figure={
+        #                       'data': data})
+        #               ])
+        #     )
+
+

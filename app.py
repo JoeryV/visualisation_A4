@@ -32,7 +32,13 @@ vertical = True
 
 
 df = load_data.load_file_100()
+df_lyrics = load_data.load_df_lyrics()
 df3 = pattern_clustering(df)
+dict_offensive_words, offensive_word_options = load_data.load_offensive_word_dict()
+df_merged_have_lyrics = load_data.load_df_lyrics()
+all_words_lable_value = load_data.load_appearance_options()
+
+
 attributes = ['tempo', 'key', 'mode', 'time_signature'] #TODO loadness start is not in the new df. Does Vincent want it? If so, add it in,
 genre_options = create_dd_options(df['primary_genre'].dropna().unique())
 genre_options.append({"label": "all genres", "value": ""})
@@ -45,6 +51,10 @@ releaseYear_options.append({"label": "all release years", "value": ""})
 p3_col_options = ['danceability', 'energy', 'key', 'loudness', 'duration_ms',
                   'speechiness', 'acousticness', 'instrumentalness', 'liveness',
                   'valence', 'tempo']
+
+markdown_text = '''## How many words sangs in each song title?
+In this graph you can see that for each artist how many words are used in a song lyric. It excludes stopwords
+'''
 
 
 placeholder = html.Div([
@@ -343,23 +353,11 @@ p2 = html.Div([
     style={'display': "none"}
 )
 
-# p3_old = html.Div([
-#     Header("Advanced Analytics"),
-#
-#     html.Div([
-#         dcc.Graph(id='historical_plot', figure=generate_adv_analytic_1(df)),# className="six columns"),
-#         dcc.Graph(id='other_plot', figure=generate_adv_analytic_2(df)),#  className="six columns")
-#     ], className='row')
-#
-# ],
-#     id="tab_id_3",
-#     style={'display':"none"}
-# )
 
 p3 = html.Div([
     Header("Advanced Analytics"),
 
-
+    # dropdown menu
     html.Div([
         html.Div([html.H6(children="Inspect attribute: ")], className="three columns"),
 
@@ -375,6 +373,7 @@ p3 = html.Div([
          ], className="nine columns"),
     ], className="row twelve columns"),
 
+    # year slider
     html.Div([
         html.Div([html.H6(children="Top2000 Year: ")], style={"padding": "20 0 0 100"}, className="three columns"),
 
@@ -393,8 +392,8 @@ p3 = html.Div([
         ], style={"width": "60%"}, className="nine columns")
     ], className="row twelve columns"),
 
-html.Div([
-
+    # row contains nr songs plot and attribute averages plot
+    html.Div([
         # Number of songs per publication year
         html.Div([
             get_subheader("Number of songs per publication year", size=3, className="gs-header gs-text-header"),
@@ -423,16 +422,17 @@ html.Div([
 
     ], className="row twelve columns"),
 
-
-
-
+    # pattern analysis title + markdown text
     html.Div([
         get_subheader('Pattern Analysis', size=4, className="gs-header gs-text-header"),
-        html.Div([dcc.Markdown(
-            dedent('''Introduction/exlpanation to come. Possibly also add input for number of clusters'''))]),
+
+        html.Div([dcc.Markdown(dedent('''Introduction/exlpanation to come. Possibly also add input for number of clusters'''))]),
+
     ], className='row twelve columns'),
 
+    # row contains left and right plot for the second row of visualisations
     html.Div([
+            # the left plot
             html.Div([
                 dcc.Graph(id='left_plot',
                           figure=generate_left_plot(df3),
@@ -442,6 +442,7 @@ html.Div([
                 # style={'width': '45%', 'display': 'inline-block', 'float': 'left',
                 #        'border': 'thin lightgrey solid', 'padding': '10 10 1=0 10'}
 
+            # the right plot
             html.Div([
                 dcc.Graph(id='right_plot',
                           figure=generate_right_plot(df, df3),
@@ -452,18 +453,8 @@ html.Div([
             #            'border': 'thin lightgrey solid'}),  # , 'padding': '10 10 10 10'
 
         ], className="row twelve columns"),
-        # html.Div([
-        #     dcc.Graph(id='left_plot', figure=generate_left_plot(df3))],
-        #     style={'width': '45%', 'display': 'inline-block', 'float': 'left',
-        #            'border': 'thin lightgrey solid', 'padding': '10 10 1=0 10'}),
 
-        # html.Div([
-        #     dcc.Graph(id='right_plot', figure=generate_right_plot(df, df3))],
-        #     style={'width': '45%', 'display': 'inline-block', 'float': 'right',
-        #            'border': 'thin lightgrey solid'}),  # , 'padding': '10 10 10 10'
-
-    html.Div([dcc.Markdown(
-        dedent('''Also here to-do: add table which shows songs from the in the left image selected cluster(s)''')), ],
+    html.Div([dcc.Markdown(dedent('''Also here to-do: add table which shows songs from the in the left image selected cluster(s)''')), ],
              style={'display': 'inline-block', 'float': 'bottom'})
 ],
     id="tab_id_3",
@@ -471,30 +462,95 @@ html.Div([
 )
 
 
-p4 = html.Div([],
-              id="tab_id_4",
-              style={'display':"none"}
-              )
+p4 = html.Div([
+    Header("Lyric Analysis"),
 
-# external_css = [
-#     "https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css",
-#     "https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css",  # this one contains the headers
-#     "//fonts.googleapis.com/css?family=Raleway:400,300,600",
-#     "https://codepen.io/bcd/pen/KQrXdb.css",
-#     "https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
-# ]
-#
-# for css in external_css:
-#     app.css.append_css({"external_url": css})
-#
-# external_js = [
-#     "https://code.jquery.com/jquery-3.2.1.min.js",
-#     "https://codepen.io/bcd/pen/YaXojL.js"
-# ]
-#
-# for js in external_js:
-#     app.scripts.append_script({"external_url": js})
-#
+    html.Div([
+        html.Div([html.H6(children="Offensive words: ")], className="three columns"),
+
+        html.Div([
+            dcc.Dropdown(
+                id='ddOffensiveWords',
+                options=offensive_word_options,
+                value=['dirty', 'shit', 'sex'],
+                multi=True,
+                style={"width": "80%"},
+            ),
+        ], className="nine columns"),
+    ], className="row twelve columns"),
+
+    html.Div([
+        html.Div([html.H6(children="Words to search: ")], className="three columns"),
+
+        html.Div([
+            dcc.Dropdown(
+                id='ddWordSearch',
+                options=all_words_lable_value,
+                value=['honey', 'heart','love'],
+                multi=True,
+                style={"width": "80%"},
+            ),
+        ], className="nine columns"),
+    ], className="row twelve columns"),
+
+
+    html.Div([
+        html.Div([
+            get_subheader("Appearance of Offensive Words", size=3, className="gs-header gs-text-header"),
+
+            dcc.Graph(
+                id='offensiveWordsPlot',
+                figure=create_offensive_words_plot(dict_offensive_words, ['dirty', 'shit', 'sex']),
+                style={"margin": "0 0 0 0", "width": "100%"},
+            )
+        ], className="six columns"),
+
+        html.Div([
+            get_subheader("First Appearance of Words", size=3, className="gs-header gs-text-header"),
+
+            dcc.Graph(
+                id='firstAppearance',
+                figure=create_search_words_plot(df_merged_have_lyrics, ['honey', 'heart','love']),
+                style={"margin": "0 0 0 0", "width": "100%"},
+            )
+        ], className="six columns")
+    ], className="row twelve columns")
+
+
+## THIS WAS THE VERY EXTENSIVE PLOT
+    # dcc.Markdown(children=markdown_text),
+    # dcc.Graph(
+    #     id='word-count-vs-year-all',
+    #     figure={
+    #         'data': [
+    #             go.Scatter(
+    #                 y=df_lyrics[df_lyrics['Artist'] == i]['lyrics_word_count'],
+    #                 x=df_lyrics[df_lyrics['Artist'] == i]['Year'],
+    #                 text=df_lyrics[df_lyrics['Artist'] == i]['Title'],
+    #                 mode='markers',
+    #                 opacity=0.6,
+    #                 marker={
+    #                     'size': 10,
+    #                     'line': {'width': 0.5, 'color': 'white'}
+    #                 },
+    #                 name=i
+    #             ) for i in sorted(df_lyrics.Artist.unique())
+    #         ],
+    #         'layout': go.Layout(
+    #             yaxis={'type': 'log', 'title': 'number of words in song'},
+    #             xaxis={'title': 'song release year'},
+    #             margin={'l': 100, 'b': 40, 't': 10, 'r': 10},
+    #             legend={'x': 1, 'y': 1},
+    #             hovermode='closest'
+    #         )
+    #     }
+    # ),
+],
+    id="tab_id_4",
+    style={'display':"none"}
+)
+
+
 
 
 app.layout = html.Div(
@@ -751,6 +807,18 @@ def update_historical_plot(year_value):
               [Input("dd_song_p3", "value")])
 def update_historical_plot(attribute_value):
     return generate_adv_analytic_2(df, attribute_value)
+
+
+@app.callback(Output('offensiveWordsPlot', 'figure'),
+              [Input('ddOffensiveWords', 'value')])
+def update_output_div(input_value):
+    return create_offensive_words_plot(dict_offensive_words, input_value)
+
+
+@app.callback(Output('firstAppearance', 'figure'),
+              [Input('ddWordSearch', 'value')])
+def update_output_div(input_value):
+    return create_search_words_plot(df_merged_have_lyrics, input_value)
 
 
 @app.callback([Output("tab_id_1", "style"),

@@ -202,7 +202,41 @@ def generate_adv_analytic_2(df):
     fig = dict(data=data, layout=layout)
     return (fig)
 
+# SJOERD FUNCTIONS
+def getBestArtistName(df):
+    return df.Artist.value_counts().index[0]
 
+def getBestArtistWon(df):
+    return str(df.Artist.value_counts()[0])
+
+def getBestSongTitle(df):
+    return df.iloc[(df.iloc[:, 4:24] == 1).sum(axis=1).index[0]].Title
+
+def getBestSongArtist(df):
+    return df.iloc[(df.iloc[:,4:24]==1).sum(axis=1).index[0]].Artist
+
+def getBestSongWon(df):
+    return str((df.iloc[:,4:24]==1).sum(axis=1)[0])
+
+def getHighestClimberName(df):
+    return df.iloc[df.iloc[:, 4:24][
+        (df.iloc[:, 4:24].diff(axis=1) == df.iloc[:, 4:24].diff(axis=1).min().min())
+            .sum(axis=1) > 0].index].Artist + "-" + df.iloc[df.iloc[:, 4:24][
+        (df.iloc[:, 4:24].diff(axis=1) == df.iloc[:, 4:24].diff(axis=1).min().min())
+            .sum(axis=1) > 0].index].Title
+
+def getHighestClimberNr(df):
+    return str(int(abs(df.iloc[:, 4:24].diff(axis=1).min().min())))
+
+def getBiggestLosterName(df):
+    return df.iloc[df.iloc[:, 4:24][
+        (df.iloc[:, 4:24].diff(axis=1) == df.iloc[:, 4:24].diff(axis=1).max().max())
+            .sum(axis=1) > 0].index].Artist + "-" + df.iloc[df.iloc[:, 4:24][
+        (df.iloc[:, 4:24].diff(axis=1) == df.iloc[:, 4:24].diff(axis=1).max().max())
+            .sum(axis=1) > 0].index].Title
+
+def getBiggestLosterNr(df):
+    return str(int(abs(df.iloc[:, 4:24].diff(axis=1).max().max())))
 
 
 
@@ -308,6 +342,7 @@ if speedup == False:
             }
         ),
     ])
+
     landing_page_1 = html.Div([
         html.H3('Takes a milly times to render'),
         dcc.Graph(id='Vincent_plot', figure=update_plots(df_audio_analysis)),
@@ -399,27 +434,59 @@ landing_page_2 = html.Div([
 
 ## from app layout
 
-# html.Div([
-#     html.Div([dcc.Markdown(dedent('''Add introductory text'''))]),
-#
-#     # html.Div([
-#     #     html.Div([
-#               dcc.Graph(id='historical_plot', figure=generate_adv_analytic_1(df))],
-#     #         ],
-#     #         className="five columns",
-#     #         # style={'width': '45%', 'display': 'inline-block', 'float': 'left',
-#     #         #        'border': 'thin lightgrey solid'}),  # , 'padding': '10 10 10 10'
-#     #
-#     #     ),
-#     #
-#     # ], ),
-#
-# ], className="row twelve columns"),
+html.Div([
+    html.Div([dcc.Markdown(dedent('''Add introductory text'''))]),
 
-# html.Div([
-#     dcc.Graph(id='other_plot', figure=generate_adv_analytic_2(df))],
-#     className="five columns",
-#     # style={'width': '45%', 'display': 'inline-block', 'float': 'right',
-#     #        'border': 'thin lightgrey solid', 'padding': '10 10 10 10'}),  # className="six columns"
+    # html.Div([
+    #     html.Div([
+              dcc.Graph(id='historical_plot', figure=generate_adv_analytic_1(df))],
+    #         ],
+    #         className="five columns",
+    #         # style={'width': '45%', 'display': 'inline-block', 'float': 'left',
+    #         #        'border': 'thin lightgrey solid'}),  # , 'padding': '10 10 10 10'
+    #
+    #     ),
+    #
+    # ], ),
+
+], className="row twelve columns"),
+
+html.Div([
+    dcc.Graph(id='other_plot', figure=generate_adv_analytic_2(df))],
+    className="five columns",
+    # style={'width': '45%', 'display': 'inline-block', 'float': 'right',
+    #        'border': 'thin lightgrey solid', 'padding': '10 10 10 10'}),  # className="six columns"
+)
+
+# p3_old = html.Div([
+#     Header("Advanced Analytics"),
+#
+#     html.Div([
+#         dcc.Graph(id='historical_plot', figure=generate_adv_analytic_1(df)),# className="six columns"),
+#         dcc.Graph(id='other_plot', figure=generate_adv_analytic_2(df)),#  className="six columns")
+#     ], className='row')
+#
+# ],
+#     id="tab_id_3",
+#     style={'display':"none"}
 # )
 
+## from styling stuff
+external_css = [
+    "https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css",
+    "https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css",  # this one contains the headers
+    "//fonts.googleapis.com/css?family=Raleway:400,300,600",
+    "https://codepen.io/bcd/pen/KQrXdb.css",
+    "https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+]
+
+for css in external_css:
+    app.css.append_css({"external_url": css})
+
+external_js = [
+    "https://code.jquery.com/jquery-3.2.1.min.js",
+    "https://codepen.io/bcd/pen/YaXojL.js"
+]
+
+for js in external_js:
+    app.scripts.append_script({"external_url": js})
