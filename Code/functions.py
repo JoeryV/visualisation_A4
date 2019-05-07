@@ -410,12 +410,3 @@ def create_search_words_plot(df_merged_have_lyrics, input_value):
 
     figure = {'data': data, "layout": layout}
     return figure
-        # (html.Div([dcc.Markdown(children=markdown_text),
-        #               dcc.Graph(
-        #                   id='Graph1',
-        #                   figure={
-        #                       'data': data})
-        #               ])
-        #     )
-
-

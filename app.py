@@ -178,7 +178,7 @@ p1 = html.Div([
 
         # div containing the song description/ text
         html.Div([
-            get_subheader("Text", size=4, className="gs-header gs-text-header"),
+            get_subheader("Song Information", size=4, className="gs-header gs-text-header"),
             html.Div([
                 dcc.Markdown(dedent('''Unfortunately, we do not have any information on this song yet. 
                 We are working hard to realise descriptions for every song.
@@ -251,7 +251,8 @@ p2 = html.Div([
                             ),
 
                     # The amount of times the artist has won
-                    html.H3(id="best_artist_count", children="won {} times".format(best_artist_count(df)), ##TODO have to create a callback for this
+                    html.H3(id="best_artist_count",
+                            children="won {} times".format(best_artist_count(df)), ##TODO have to create a callback for this
                             style={"margin": "0 0 0 0",},
                             className="ten columns",
                             ),
