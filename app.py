@@ -32,7 +32,7 @@ vertical = True
 
 
 df = load_data.load_file_100()
-df_lyrics = load_data.load_df_lyrics()
+# df_lyrics = load_data.load_df_lyrics()
 df3 = pattern_clustering(df)
 dict_offensive_words, offensive_word_options = load_data.load_offensive_word_dict()
 df_merged_have_lyrics = load_data.load_df_lyrics()
