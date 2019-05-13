@@ -268,24 +268,83 @@ def pattern_clustering(dataframe, n_clusters=10):
     return tmp_df
 
 
+# def generate_left_plot(dataframe, n_clusters=10):
+#     means = {}
+#     for cluster in range(n_clusters):
+#         temp = dataframe[dataframe['cluster'] == cluster].drop('cluster', axis=1)
+#
+#         ## Keuze: 2500 voor NaN values
+#         means[cluster] = temp.mean()
+#
+#     data = [go.Scatter(x=means[0].keys(), y=means[cluster].values,
+#                        name='Group {}'.format(cluster),
+#                        ) for cluster in range(n_clusters)]
+#     layout = go.Layout(xaxis=dict(title='Year'),
+#                        yaxis=dict(title='Average rank in Top 2000', range=[2000, 1]),
+#         paper_bgcolor='#FAFAFA',
+#         plot_bgcolor='#FAFAFA',
+#     )
+#     fig = go.Figure(data=data, layout=layout)
+#     return fig
+#
+#
+# def generate_right_plot(df, dataframe, n_clusters=10):
+#     temp = df[df.index.isin(dataframe.index)][
+#         ['speechiness', 'energy', 'danceability', 'valence', 'liveness', 'instrumentalness', 'acousticness']]
+#
+#     result = pd.concat([dataframe['cluster'], temp], axis=1, join='inner')
+#
+#     means_spider = {}
+#     for cluster in range(n_clusters):
+#         temp = result[result['cluster'] == cluster].drop('cluster', axis=1)
+#         means_spider[cluster] = temp.mean()
+#     dataframe = pd.DataFrame(means_spider).T
+#
+#     features = ['danceability', 'energy', 'speechiness', 'acousticness',
+#                 'instrumentalness', 'liveness', 'valence']
+#
+#     data = [go.Scatterpolar(
+#         r=dataframe.iloc[i][features].values,
+#         theta=features, name='Group {}'.format(i),
+#         fill='toself') for i in range(len(dataframe))]
+#     layout = go.Layout(
+#         paper_bgcolor='#FAFAFA',
+#         plot_bgcolor='#FAFAFA',
+#     )
+#
+#     #     layout = go.Layout( polar=dict( radialaxis=dict( visible=True, range=[0, 1]  )  ),  paper_bgcolor='#FAFAF, plot_bgcolor='#FAFAFA', showlegend=False )
+#
+#     fig = go.Figure(data=data, layout=layout)
+#     return fig
+
+
+# Vincent functions
+#TODO vincent's functions need to be updated by song (radar), song & years (rank_plot), song & attribute & years
+# (attribute vs time), additionally it should work with comparing multiple songs
+
 def generate_left_plot(dataframe, n_clusters=10):
     means = {}
+    #################################
+    count = 1
     for cluster in range(n_clusters):
         temp = dataframe[dataframe['cluster'] == cluster].drop('cluster', axis=1)
+        if temp.mean().min() < 1900:
+            ## Keuze: 2500 voor NaN values
+            means[count] = temp.mean()
+            count += 1
 
-        ## Keuze: 2500 voor NaN values
-        means[cluster] = temp.mean()
+    data = [go.Scatter(x=means[1].keys(), y=means[cluster].values, name='Group {}'.format(cluster),
+                       ) for cluster in range(1, count)]
 
-    data = [go.Scatter(x=means[0].keys(), y=means[cluster].values,
-                       name='Group {}'.format(cluster),
-                       ) for cluster in range(n_clusters)]
+    #################################
+
     layout = go.Layout(xaxis=dict(title='Year'),
                        yaxis=dict(title='Average rank in Top 2000', range=[2000, 1]),
-        paper_bgcolor='#FAFAFA',
-        plot_bgcolor='#FAFAFA',
-    )
+                       paper_bgcolor='#FAFAFA',
+                       plot_bgcolor='#FAFAFA',
+                       )
     fig = go.Figure(data=data, layout=layout)
-    return fig
+    return (fig)
 
 
 def generate_right_plot(df, dataframe, n_clusters=10):
@@ -293,11 +352,16 @@ def generate_right_plot(df, dataframe, n_clusters=10):
         ['speechiness', 'energy', 'danceability', 'valence', 'liveness', 'instrumentalness', 'acousticness']]
 
     result = pd.concat([dataframe['cluster'], temp], axis=1, join='inner')
-
     means_spider = {}
+    #################################
+    count = 1
     for cluster in range(n_clusters):
         temp = result[result['cluster'] == cluster].drop('cluster', axis=1)
-        means_spider[cluster] = temp.mean()
+        if temp.mean().min() < 1900:
+            means_spider[count] = temp.mean()
+            count += 1
+    #################################
+
     dataframe = pd.DataFrame(means_spider).T
 
     features = ['danceability', 'energy', 'speechiness', 'acousticness',
@@ -305,7 +369,7 @@ def generate_right_plot(df, dataframe, n_clusters=10):
 
     data = [go.Scatterpolar(
         r=dataframe.iloc[i][features].values,
-        theta=features, name='Group {}'.format(i),
+        theta=features, name='Group {}'.format(i + 1),
         fill='toself') for i in range(len(dataframe))]
     layout = go.Layout(
         paper_bgcolor='#FAFAFA',
@@ -318,9 +382,7 @@ def generate_right_plot(df, dataframe, n_clusters=10):
     return fig
 
 
-# Vincent functions
-#TODO vincent's functions need to be updated by song (radar), song & years (rank_plot), song & attribute & years
-# (attribute vs time), additionally it should work with comparing multiple songs
+
 def create_attributePlot(df, song, attribute):
     '''Function updates the attribute vs time plot on the first page of the dashboard'''
     song = song[0]
