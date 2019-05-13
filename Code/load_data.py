@@ -26,6 +26,7 @@ def load_full_file():
 
 
 def load_small_full_file():
+    '''This is the smallest df with all rows'''
     df = pd.read_csv('./Data/corrected_data_small.csv')
     df.Year = df.Year.astype(str)
     year_list = ['1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010',
@@ -36,6 +37,7 @@ def load_small_full_file():
 
 
 def load_smaller_full_file():
+    '''This ones is smaller than full, but larger than small'''
     df = pd.read_csv('./Data/corrected_data_smaller.csv')
     df.Year = df.Year.astype(str)
     year_list = ['1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010',

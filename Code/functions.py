@@ -10,7 +10,7 @@ from sklearn.cluster import KMeans
 from Code import token_files as tf
 from Code.time_series import get_source, get_values
 
-
+import numpy as np
 
 def tab_style(vertical=True):
     if vertical:
@@ -19,6 +19,7 @@ def tab_style(vertical=True):
             'textAlign': 'left',
             'float': 'left',
             # "border": "2px dashed lightgreen",
+            "font-size": "15px"
                  }
     else:
         style = {'width': '100vh'}
@@ -65,16 +66,135 @@ def create_dd_options(list_of_values):
         options.append({"label": value, "value": value})
     return options
 
-def generate_year_options(df, col='Year'):
+def generate_year_options(df, col='Year', top2000year=True):
     years = df[col].astype(int)
     # year_range = list(range(years.min(), years.max()+1, 10)) + [2018]
-    year_range = list([1924] + list(range(1930, 2020, 10)) + [2018])
-    year_range = ['1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006',
-                  '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014',
-                  '2015', '2016', '2017', '2018']
+    year_range = list([1924] + list(range(1950, 2000, 20)) + [2018])
+    if top2000year:
+        year_range = ['1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006',
+                      '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014',
+                      '2015', '2016', '2017', '2018']
     year_dict = {year: year for year in year_range}
     return year_dict
 
+
+# # Casper functions
+# def generate_adv_analytic_1(df, year):
+#     year = str(year)
+#     count_per_publ_year = df.loc[df[year] > 0, "Year"].value_counts().sort_index()
+#
+#     data = [go.Bar(
+#         name="Based on Top2000 year {}".format(year),
+#         x=list(count_per_publ_year[count_per_publ_year > 0].index),
+#         y=list(count_per_publ_year[count_per_publ_year > 0].values))
+#     ]
+#
+#     layout = go.Layout(
+#         # xaxis=dict(range=[1938,2018]),
+#         # yaxis=dict(range=[0,100]),
+#         # title='Number of songs per Publication Year',
+#         paper_bgcolor='#FAFAFA',
+#         plot_bgcolor='#FAFAFA',
+#         margin=go.layout.Margin(
+#             l=10,
+#             r=10,
+#             b=20,
+#             t=0
+#         )
+#     )
+#
+#     fig = dict(data=data, layout=layout)
+#     return fig
+#
+#
+# def generate_adv_analytic_2(df, attribute):
+#     df['AVG_' + attribute] = df.groupby('Year')[attribute].transform('mean')
+#     temp = df.groupby(['Year', 'AVG_' + attribute]).size().reset_index().rename(columns={0: 'count'})
+#     data = [go.Bar(x=list(temp.Year.values),
+#                    y=list(temp['AVG_' + attribute].values),
+#                    visible=True,
+#                    name=attribute)
+#             ]
+#     layout = dict(  # title='Publication year averages',
+#         showlegend=False,
+#         paper_bgcolor='#FAFAFA',
+#         plot_bgcolor='#FAFAFA',
+#         margin=go.layout.Margin(
+#             l=10,
+#             r=30,
+#             b=20,
+#             t=0
+#         )
+#     )
+#
+#     fig = dict(data=data, layout=layout)
+#     return (fig)
+#
+# def pattern_clustering(dataframe, n_clusters=10):
+#     """ Clusters patterns, adds column to the dataframe containing the cluster number of the respective row"""
+#     ## Clean dataframe
+#     years = [str(i) for i in range(1999, 2019)]
+#     tmp_df = copy(dataframe)
+#     for year in years:
+#         tmp_df.loc[tmp_df[year] == 0, year] = 2500
+#         tmp_df.loc[tmp_df[year].isnull(), year] = 2500
+#     tmp_df = tmp_df[years]
+#
+#     kmeans = KMeans(n_clusters=n_clusters)
+#     kmeans.fit(tmp_df)
+#     y_kmeans = kmeans.predict(tmp_df)
+#     tmp_df.loc[:, 'cluster'] = y_kmeans
+#     return (tmp_df)
+#
+#
+# def generate_left_plot(dataframe, n_clusters=10):
+#     means = {}
+#     for cluster in range(n_clusters):
+#         temp = dataframe[dataframe['cluster'] == cluster].drop('cluster', axis=1)
+#
+#         ## Keuze: 2500 voor NaN values
+#         means[cluster] = temp.mean()
+#
+#     data = [go.Scatter(x=means[0].keys(), y=means[cluster].values, name='Cluster {}'.format(cluster),
+#                        ) for cluster in range(n_clusters)]
+#     layout = go.Layout(
+#         yaxis=dict(autorange='reversed'),
+#         paper_bgcolor='#FAFAFA',
+#         plot_bgcolor='#FAFAFA',
+#     )
+#     fig = go.Figure(data=data, layout=layout)
+#     return (fig)
+#
+#
+# def generate_right_plot(df, dataframe, n_clusters=10):
+#     temp = df[df.index.isin(dataframe.index)][
+#         ['speechiness', 'energy', 'danceability', 'valence', 'liveness', 'instrumentalness', 'acousticness']]
+#
+#     result = pd.concat([dataframe['cluster'], temp], axis=1, join='inner')
+#
+#     means_spider = {}
+#     for cluster in range(n_clusters):
+#         temp = result[result['cluster'] == cluster].drop('cluster', axis=1)
+#         means_spider[cluster] = temp.mean()
+#     dataframe = pd.DataFrame(means_spider).T
+#
+#     features = ['danceability', 'energy', 'speechiness', 'acousticness',
+#                 'instrumentalness', 'liveness', 'valence']
+#
+#     data = [go.Scatterpolar(
+#         r=dataframe.iloc[i][features].values,
+#         theta=features, name='Cluster {}'.format(i),
+#         fill='toself') for i in range(len(dataframe))]
+#     layout = go.Layout(
+#         paper_bgcolor='#FAFAFA',
+#         plot_bgcolor='#FAFAFA',
+#     )
+#
+#
+#     #     layout = go.Layout( polar=dict( radialaxis=dict( visible=True, range=[0, 1]  )  ),  paper_bgcolor='#FAFAF, plot_bgcolor='#FAFAFA', showlegend=False )
+#
+#     fig = go.Figure(data=data, layout=layout)
+#     return fig
 
 # Casper functions
 def generate_adv_analytic_1(df, year):
@@ -87,18 +207,19 @@ def generate_adv_analytic_1(df, year):
         y=list(count_per_publ_year[count_per_publ_year > 0].values))
     ]
 
-    layout = go.Layout(
+    layout = go.Layout(xaxis=dict(title='Song Publication Year'),
+                       yaxis=dict(title='Number of Songs'),
         # xaxis=dict(range=[1938,2018]),
         # yaxis=dict(range=[0,100]),
         # title='Number of songs per Publication Year',
         paper_bgcolor='#FAFAFA',
         plot_bgcolor='#FAFAFA',
-        margin=go.layout.Margin(
-            l=10,
-            r=10,
-            b=20,
-            t=0
-        )
+#         margin=go.layout.Margin(
+#             l=10,
+#             r=10,
+#             b=20,
+#             t=0
+#         )
     )
 
     fig = dict(data=data, layout=layout)
@@ -114,15 +235,17 @@ def generate_adv_analytic_2(df, attribute):
                    name=attribute)
             ]
     layout = dict(  # title='Publication year averages',
+                xaxis=dict(title='Song Publication Year'),
+                yaxis=dict(title='Score on attribute'),
         showlegend=False,
         paper_bgcolor='#FAFAFA',
         plot_bgcolor='#FAFAFA',
-        margin=go.layout.Margin(
-            l=10,
-            r=30,
-            b=20,
-            t=0
-        )
+#         margin=go.layout.Margin(
+#             l=10,
+#             r=30,
+#             b=20,
+#             t=0
+#         )
     )
 
     fig = dict(data=data, layout=layout)
@@ -142,7 +265,7 @@ def pattern_clustering(dataframe, n_clusters=10):
     kmeans.fit(tmp_df)
     y_kmeans = kmeans.predict(tmp_df)
     tmp_df.loc[:, 'cluster'] = y_kmeans
-    return (tmp_df)
+    return tmp_df
 
 
 def generate_left_plot(dataframe, n_clusters=10):
@@ -153,15 +276,16 @@ def generate_left_plot(dataframe, n_clusters=10):
         ## Keuze: 2500 voor NaN values
         means[cluster] = temp.mean()
 
-    data = [go.Scatter(x=means[0].keys(), y=means[cluster].values, name='Cluster {}'.format(cluster),
+    data = [go.Scatter(x=means[0].keys(), y=means[cluster].values,
+                       name='Group {}'.format(cluster),
                        ) for cluster in range(n_clusters)]
-    layout = go.Layout(
-        yaxis=dict(autorange='reversed'),
+    layout = go.Layout(xaxis=dict(title='Year'),
+                       yaxis=dict(title='Average rank in Top 2000', range=[2000, 1]),
         paper_bgcolor='#FAFAFA',
         plot_bgcolor='#FAFAFA',
     )
     fig = go.Figure(data=data, layout=layout)
-    return (fig)
+    return fig
 
 
 def generate_right_plot(df, dataframe, n_clusters=10):
@@ -181,13 +305,12 @@ def generate_right_plot(df, dataframe, n_clusters=10):
 
     data = [go.Scatterpolar(
         r=dataframe.iloc[i][features].values,
-        theta=features, name='Cluster {}'.format(i),
+        theta=features, name='Group {}'.format(i),
         fill='toself') for i in range(len(dataframe))]
     layout = go.Layout(
         paper_bgcolor='#FAFAFA',
         plot_bgcolor='#FAFAFA',
     )
-
 
     #     layout = go.Layout( polar=dict( radialaxis=dict( visible=True, range=[0, 1]  )  ),  paper_bgcolor='#FAFAF, plot_bgcolor='#FAFAFA', showlegend=False )
 
@@ -305,49 +428,76 @@ def get_track_sample(current_song):
     return sample['preview_url']
 
 
-def best_artist_name(df):
-    return df.Artist.value_counts().index[0]
+########################################################################################################################################
+############################################################# Fun facts ################################################################
+########################################################################################################################################
+def clean(df):
+    year_list = ['1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010',
+                 '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018']
+    df.loc[:, year_list] = df.loc[:, year_list].replace(0, np.nan)
+    df.loc[:, year_list] = df.loc[:, year_list].astype(float)
+    return df
 
+def best_artist_name(df,number):
+    df = clean(df)
+    return df.Artist.value_counts().index[number]
 
-def best_artist_count(df):
-    return str(df.Artist.value_counts()[0])
+def best_artist_count(df,number):
+    df = clean(df)
+    return str(df.Artist.value_counts()[number])
 
+def best_rated_song(df,number):
+    df = clean(df)
+    df_temp = df.copy()
+    if number > 0:
+        df_temp = df_temp.drop((df_temp.iloc[:,5:24]==df_temp['Highest position'].sort_values().tolist()[0]).sum(axis=1).sort_values(ascending=False).index[0]).copy()
+    if number == 2:
+        df_temp = df_temp.drop((df_temp.iloc[:,5:24]==df_temp['Highest position'].sort_values().tolist()[0]).sum(axis=1).sort_values(ascending=False).index[0]).copy()
+    return df_temp.loc[(df_temp.iloc[:,5:24]==df_temp['Highest position'].sort_values().tolist()[0]).sum(axis=1).sort_values(ascending=False).index[0]].Artist + " - " + df_temp.loc[(df_temp.iloc[:,5:24]==df_temp['Highest position'].sort_values().tolist()[0]).sum(axis=1).sort_values(ascending=False).index[0]].Title
 
-def best_rated_song(df):
-    return df[(df.iloc[:,5:24].replace(0,2001).min().min()==df.iloc[:,5:24]).sum(axis=1)>0].reset_index().iloc[0].Artist + " - " + df[(df.iloc[:,5:24].replace(0,2001).min().min()==df.iloc[:,5:24]).sum(axis=1)>0].reset_index().iloc[0].Title
+def best_rated_song2(df,number):
+    df = clean(df)
+    df_temp = df.copy()
+    if number > 0:
+        df_temp = df_temp.drop((df_temp.iloc[:,5:24]==df_temp['Highest position'].sort_values().tolist()[0]).sum(axis=1).sort_values(ascending=False).index[0]).copy()
+    if number == 2:
+        df_temp = df_temp.drop((df_temp.iloc[:,5:24]==df_temp['Highest position'].sort_values().tolist()[0]).sum(axis=1).sort_values(ascending=False).index[0]).copy()
+    return df_temp.loc[(df_temp.iloc[:,5:24]==df_temp['Highest position'].sort_values().tolist()[0]).sum(axis=1).sort_values(ascending=False).index[0]].Title
 
+def best_rated_count(df,number):
+    df = clean(df)
+    word = ' time'
+    if int((df[df.Title==best_rated_song2(df,number)].iloc[:,5:24]==df[df.Title==best_rated_song2(df,number)].iloc[:,5:24].min().min()).sum().sum()) > 1:
+        word = ' times'
+    return "Number " + str(int(df[df.Title==best_rated_song2(df,number)].iloc[:,5:24].min().min())) + " for " + str(int((df[df.Title==best_rated_song2(df,number)].iloc[:,5:24]==df[df.Title==best_rated_song2(df,number)].iloc[:,5:24].min().min()).sum().sum())) + word
 
-def best_rated_song2(df):
-    return df[(df.iloc[:,5:24].replace(0,2001).min().min()==df.iloc[:,5:24]).sum(axis=1)>0].reset_index().iloc[0].Title
+def highest_climber(df,number):
+    df = clean(df)
+    return df[(df.iloc[:,5:24].replace(np.NaN,2001).diff(axis=1).iloc[:,1:]==sorted([x for y in df.iloc[:,5:25].replace(np.NaN,2001).diff(axis=1).iloc[:,1:].values for x in y])[number]).sum(axis=1)>=1].Artist.tolist()[0] + ' - ' +  df[(df.iloc[:,5:24].replace(np.NaN,2001).diff(axis=1).iloc[:,1:]==sorted([x for y in df.iloc[:,5:25].replace(np.NaN,2001).diff(axis=1).iloc[:,1:].values for x in y])[number]).sum(axis=1)>=1].Title.tolist()[0]
 
+def highest_climber_count(df,number):
+    df = clean(df)
+    return "Climbed with "  + str(int(abs(sorted([x for y in df.iloc[:,5:24].replace(np.NaN,2001).diff(axis=1).iloc[:,1:].values for x in y])[number]))) + " places"
 
-def best_rated_count(df):
-    return str(df.iloc[:,5:24].replace(0,2001).min().min())
+def highest_climber_title(df,number):
+    df = clean(df)
+    return df[(df.iloc[:,5:24].replace(np.NaN,2001).diff(axis=1).iloc[:,1:]==sorted([x for y in df.iloc[:,5:25].replace(np.NaN,2001).diff(axis=1).iloc[:,1:].values for x in y])[number]).sum(axis=1)>=1].Title.tolist()[0]
 
+def biggest_loser(df,number):
+    df = clean(df)
+    return df[(df.iloc[:,5:24].replace(np.NaN,2001).diff(axis=1).iloc[:,1:]==sorted([x for y in df.iloc[:,5:25].replace(np.NaN,2001).diff(axis=1).iloc[:,1:].values for x in y],reverse=True)[number]).sum(axis=1)>=1].Artist.tolist()[0] + ' - ' +  df[(df.iloc[:,5:24].replace(np.NaN,2001).diff(axis=1).iloc[:,1:]==sorted([x for y in df.iloc[:,5:25].replace(np.NaN,2001).diff(axis=1).iloc[:,1:].values for x in y],reverse=True)[number]).sum(axis=1)>=1].Title.tolist()[0]
 
-def highest_climber(df):
-    return df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].min().min()).sum(axis=1)>=1].Artist + '-' +  df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].min().min()).sum(axis=1)>=1].Title
+def biggest_loser_count(df,number):
+    df = clean(df)
+    return "Lost "  + str(int(sorted([x for y in df.iloc[:,5:24].replace(np.NaN,2001).diff(axis=1).iloc[:,1:].values for x in y], reverse=True)[number])) + " places"
 
+def loser_title(df,number):
+    df = clean(df)
+    return df[(df.iloc[:,5:24].replace(np.NaN,2001).diff(axis=1).iloc[:,1:]==sorted([x for y in df.iloc[:,5:25].replace(np.NaN,2001).diff(axis=1).iloc[:,1:].values for x in y],reverse=True)[number]).sum(axis=1)>=1].Title.tolist()[0]
 
-def highest_climber_count(df):
-    return str(int(abs(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].min().min())))
-
-
-def highest_climber_title(df):
-    return df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].min().min()).sum(axis=1)>=1].Title
-
-
-def biggest_loser(df):
-    return df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].max().max()).sum(axis=1)>=1].Artist + ' - ' + df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].max().max()).sum(axis=1)>=1].Title
-
-
-def biggest_loser_count(df):
-    return str(int(abs(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].max().max())))
-
-
-def loser_title(df):
-    return df[(df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:]==df.iloc[:,4:24].replace(0,2001).diff(axis=1).iloc[:,2:].max().max()).sum(axis=1)>=1].Title
-
+########################################################################################################################################
+########################################################################################################################################
+########################################################################################################################################
 
 ## NIMA FUNCTIONS
 def create_offensive_words_plot(dict_offensive_words, input_value):
