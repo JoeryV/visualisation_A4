@@ -22,10 +22,10 @@ tabs = dcc.Tabs(
     id='tabs',
     children=
     [
-        dcc.Tab(label='Pick your song', value=1     ), #style={"font-size": "20px"}),
-        dcc.Tab(label='Fun Facts', value=2          ), #style={"font-size": "20px"}),
-        dcc.Tab(label='Advanced analytics', value=3 ), #),
-        dcc.Tab(label='Lyrics analysis', value=4    ), #),
+        dcc.Tab(label='Pick your song', value=1     , style={"font-size": "120%"}),
+        dcc.Tab(label='Fun Facts', value=2          , style={"font-size": "120%"}),
+        dcc.Tab(label='Advanced analytics', value=3 , style={"font-size": "120%"}),
+        dcc.Tab(label='Lyrics analysis', value=4    , style={"font-size": "120%"}),
     ],
     value=1,
     vertical=vertical,

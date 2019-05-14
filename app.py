@@ -10,6 +10,7 @@ CSS in Dash: https://dash.plot.ly/external-resources
 '''
 
 import dash
+import json
 import numpy as np
 import pandas as pd
 import dash_core_components as dcc
@@ -82,8 +83,8 @@ p1 = html.Div([
         html.Div([
             dcc.Dropdown(
                 id="dd_song_p1",
-                options=create_dd_options(df['Title']),
-                value=["Bohemian Rhapsody"],
+                options=create_dd_options(df['display_value']),
+                value=["Bohemian Rhapsody (Queen)"],
                 multi=True,
                 style={"width": "80%"},
                 ),
@@ -190,41 +191,48 @@ The Top 2000 Team''')),
         ),
 
     ], className='row twelve columns'),
-
-    # this row contains the graphs
     html.Div([
         get_subheader('Visualisations', size=4, className="gs-header gs-text-header"),
-
         dcc.Graph(
-            id="rankPlot",
-            figure=create_rank_plot(df, ["Bohemian Rhapsody"], (1999, 2018)),
+            id="megaPlot",
+            figure=create_plots(df, [df.display_value[0]], (1999, 2018)), #,"tempo"
+            config=config,
             style={"margin": "0 0 0 0"},
-            className="six columns"
-        ),
-
-        dcc.Graph(
-            id="radarPlot",
-            figure=create_radar(pd.DataFrame(df.loc[0]).T),
-            style={"margin": "0 0 0 0"},
-            className="six columns"
-        ),
-
-        # dcc.Graph(
-        #     id="attributePlot",
-        #     figure=create_attributePlot(df, ["Bohemian Rhapsody"], "tempo"),
-        #     style={"margin": "0 0 0 0"},
-        #     className="four columns"
-        # ),
-
-    ], className='row twelve columns')
-
-
+            className="twelve columns"
+        )
+    ], className='row twelve columns'),
+    # this row contains the graphs
+    # html.Div([
+    #     get_subheader('Visualisations', size=4, className="gs-header gs-text-header"),
+    #
+    #     dcc.Graph(
+    #         id="rankPlot",
+    #         figure=create_rank_plot(df, ["Bohemian Rhapsody"], (1999, 2018)),
+    #         style={"margin": "0 0 0 0"},
+    #         className="six columns"
+    #     ),
+    #
+    #     dcc.Graph(
+    #         id="radarPlot",
+    #         figure=create_radar(pd.DataFrame(df.loc[0]).T),
+    #         style={"margin": "0 0 0 0"},
+    #         className="six columns"
+    #     ),
+    #
+    #     # dcc.Graph(
+    #     #     id="attributePlot",
+    #     #     figure=create_attributePlot(df, ["Bohemian Rhapsody"], "tempo"),
+    #     #     style={"margin": "0 0 0 0"},
+    #     #     className="four columns"
+    #     # ),
+    #
+    # ], className='row twelve columns')
 ],
 id="tab_id_1",)
 
-########################################################################################################################################
-############################################################# Fun facts ################################################################
-########################################################################################################################################
+#######################################################################################################################
+############################################################# Fun facts ###############################################
+#######################################################################################################################
 
 
 p2 = html.Div([
@@ -790,11 +798,11 @@ p3 = html.Div([
         Press the different buttons to adjust the k. 
 
                                         '''))
-                  ],style={"font-size": "18px"},),
+                  ],style={"font-size": "120%"},),
 
-        html.Div([html.Button('3', id='button1', n_clicks_timestamp=0),
-                  html.Button('5', id='button2', n_clicks_timestamp=0),
-                  html.Button('10', id='button3', n_clicks_timestamp=0)]),
+        html.Div([html.Button('2', id='button1', n_clicks_timestamp=0),
+                  html.Button('4', id='button2', n_clicks_timestamp=0),
+                  html.Button('9', id='button3', n_clicks_timestamp=0)]),
 
     ],
         className="row twelve columns"),
@@ -805,6 +813,7 @@ p3 = html.Div([
         html.Div([
             dcc.Graph(id='left_plot',
                       figure=generate_left_plot(df3),
+                      config=config,
                       style={"margin": "0 0 0 0",
                              # 'width': '100%'
                              },
@@ -818,6 +827,7 @@ p3 = html.Div([
         html.Div([
             dcc.Graph(id='right_plot',
                       figure=generate_right_plot(df, df3),
+                      config=config,
                       style={"margin": "0 0 0 0",
                              # 'width': '100%'
                              },
@@ -871,7 +881,8 @@ p4 = html.Div([
 
             dcc.Graph(
                 id='offensiveWordsPlot',
-                figure=create_offensive_words_plot(dict_offensive_words, ['dirty', 'shit', 'sex']),
+                figure=create_offensive_words_plot(dict_offensive_words, ['dirty', 'shit', 'sex'], xaxis_type_value="Year"),
+                config=config,
                 style={
                     "margin": "0 0 0 0",
                     # "width": "100%"
@@ -884,6 +895,7 @@ p4 = html.Div([
             dcc.Graph(
                 id='firstAppearance',
                 figure=create_search_words_plot(df_merged_have_lyrics, ['honey', 'heart','love']),
+                config=config,
                 style={
                     "margin": "0 0 0 0",
                     # "width": "100%"
@@ -1046,6 +1058,10 @@ app.layout = html.Div(
 
         # hidden component to store data
         html.Div(id='_current_song_stored', style={'display': 'none'}),
+
+        html.Div(id='_filtered_offensive_words',
+                 children=json.dumps(dict_offensive_words),
+                 style={'display': 'none'}),
     ],
     className='twelve columns',
     style={
@@ -1104,7 +1120,7 @@ def update_song_options(genres, artists, release_years):
     loc_df = loc_df.loc[loc_df["primary_genre"].isin(genres)]
     loc_df = loc_df.loc[loc_df["Artist"].isin(artists)]
     loc_df = loc_df.loc[loc_df["Year"].isin(years)]
-    return create_dd_options(loc_df['Title'])
+    return create_dd_options(loc_df['display_value'])
 
 
 @app.callback(Output("_filtered_df_stored", "children"),
@@ -1125,16 +1141,52 @@ def filter_on_df(genres, artists, release_years):
     return loc_df.to_json(date_format="iso", orient="split")
 
 
+@app.callback(Output("_filtered_offensive_words", "children"),
+              [Input("ddGenre", "value"),
+               Input("ddArtist", "value"),
+               Input("releaseYearSlider", "value")
+               ])
+def filter_offensive_words(genres, artists, release_years):
+    if (not genres) or ('all genres' in genres):
+        genres = df['primary_genre'].unique()
+    if (not artists) or ('all artists' in artists):
+        artists = df['Artist'].unique()
+    years = list(range(release_years[0], release_years[1] + 1))
+    artists = [artist.lower() for artist in artists]
+
+    filtered = dict((k,v) for k, v in dict_offensive_words.items() for one_song in v if one_song[4] in genres)
+    filtered = dict((k,v) for k, v in filtered.items() for one_song in v if one_song[0] in artists)
+    filtered = dict((k,v) for k, v in filtered.items() for one_song in v if one_song[2] in years)
+    return json.dumps(filtered)
+
+
+
 ######################################################################################################################
 ################################  LANDING PAGE  ######################################################################
 ######################################################################################################################
 
+@app.callback(Output("megaPlot", "figure"),
+              [Input("dd_song_p1", "value"),
+               Input("yearRange_p1", "value"),
+               # Input("dd_attribute", "value")
+               ])
+def create_vincent_plots(songs, years): #attribute
+    # df = pd.read_json(df, orient="split")
+    return create_plots(df, songs, years)
 
 @app.callback(Output("_current_song_stored", "children"),
               [Input("dd_song_p1", "value")])
-def updateCurrentSong(song_title):
-    current_song = df.loc[df["Title"] == song_title[0]]
-    return current_song.to_json(date_format="iso", orient="split")
+def updateCurrentSong(song):
+    if song:
+        song_title = song[-1].split(" (")[0]
+        song_artist = song[-1].split(" (")[1].rstrip(")")
+        current_song = df.loc[(df["Title"] == song_title)
+                              & (df["Artist"] == song_artist)]
+        return current_song.to_json(date_format="iso", orient="split")
+    else:
+        current_song = df.loc[(df["Title"] == "Bohemian Rhapsody")
+                              & (df["Artist"] == "Queen")]
+        return current_song.to_json(date_format="iso", orient="split")
 
 
 @app.callback(Output("albumImg", "src"),
@@ -1142,12 +1194,6 @@ def updateCurrentSong(song_title):
 def getAlbumImg(current_song):
     current_song = pd.read_json(current_song, orient="split")
     return current_song["album_image"].iloc[0]
-
-# @app.callback([Output("bestArtistImg", "src")], #TODO Have to update this based on the filtered df rather than the _current_song_stored
-#               [Input("_current_song_stored", "children")])
-# def getArtistImg(current_song):
-#     current_song = pd.read_json(current_song, orient="split")
-#     return current_song["artist_image"].iloc[0]
 
 
 @app.callback(Output("songName", "children"),
@@ -1172,24 +1218,24 @@ def playSong(current_song):
     current_song = pd.read_json(current_song, orient='split')
     return get_track_sample(current_song)
 
-
-@app.callback(Output("rankPlot", "figure"),
-              [#Input("_filtered_df_stored", "children"),
-               Input("dd_song_p1", "value"),
-               Input("yearRange_p1", "value"),
-               ])
-def update_rankplot(songname, years): #df,
-    # df = pd.read_json(df, orient="split")
-    return create_rank_plot(df, songname, years)
-
-
-@app.callback(Output("radarPlot", "figure"),
-              [Input("_current_song_stored", "children")])
-def update_radarplot(current_song):
-    current_song = pd.read_json(current_song, orient="split")
-    return create_radar(current_song)
-
-
+# TODO maybe uncomment again?
+# @app.callback(Output("rankPlot", "figure"),
+#               [#Input("_filtered_df_stored", "children"),
+#                Input("dd_song_p1", "value"),
+#                Input("yearRange_p1", "value"),
+#                ])
+# def update_rankplot(songname, years): #df,
+#     # df = pd.read_json(df, orient="split")
+#     return create_rank_plot(df, songname, years)
+#
+#
+# @app.callback(Output("radarPlot", "figure"),
+#               [Input("_current_song_stored", "children")])
+# def update_radarplot(current_song):
+#     current_song = pd.read_json(current_song, orient="split")
+#     return create_radar(current_song)
+#
+#
 # @app.callback(Output("attributePlot", "figure"),
 #               [Input("dd_song_p1", "value"),
 #                Input("dd_attribute", "value"),
@@ -1281,12 +1327,13 @@ def artists(df):
 ######################################################################################################################
 
 
-@app.callback(
-    dash.dependencies.Output('left_plot', 'figure'),
-    [dash.dependencies.Input('button1', 'n_clicks_timestamp'),
-     dash.dependencies.Input('button2', 'n_clicks_timestamp'),
-     dash.dependencies.Input('button3', 'n_clicks_timestamp') ])
-def update_output(button1=0, button2=0, button3=0):
+@app.callback(Output('left_plot', 'figure'),
+              [Input("_filtered_df_stored", "children"),
+               Input('button1', 'n_clicks_timestamp'),
+               Input('button2', 'n_clicks_timestamp'),
+               Input('button3', 'n_clicks_timestamp') ])
+def update_output(filtered_df, button1=0, button2=0, button3=0):
+    filtered_df = pd.read_json(filtered_df, orient="split")
     if int(button1) > int(button2) and int(button1) > int(button3):
         n_clusters = 3
     elif int(button2) > int(button1) and int(button2) > int(button3):
@@ -1295,45 +1342,62 @@ def update_output(button1=0, button2=0, button3=0):
         n_clusters = 10
     else:
         n_clusters=10
-    return generate_left_plot(pattern_clustering(df, n_clusters), n_clusters)
-
-
-@app.callback(
-    dash.dependencies.Output('right_plot', 'figure'),
-    [dash.dependencies.Input('button1', 'n_clicks_timestamp'),
-     dash.dependencies.Input('button2', 'n_clicks_timestamp'),
-     dash.dependencies.Input('button3', 'n_clicks_timestamp') ])
-def update_output(button1=0, button2=0, button3=0):
-    if int(button1) > int(button2) and int(button1) > int(button3):
-        n_clusters = 3
-    elif int(button2) > int(button1) and int(button2) > int(button3):
-        n_clusters = 5
-    elif int(button3) > int(button1) and int(button3) > int(button2):
-        n_clusters = 10
-    else:
-        n_clusters=10
-    return generate_right_plot(df, pattern_clustering(df,n_clusters), n_clusters)
+    return generate_left_plot(pattern_clustering(filtered_df, n_clusters), n_clusters)
 
 
 @app.callback(Output("historical_plot", "figure"),
-              [Input("yearSlider", "value")])
-def update_historical_plot(year_value):
-    return generate_adv_analytic_1(df, year_value)
+              [Input("_filtered_df_stored", "children"),
+               Input("yearSlider", "value")])
+def update_historical_plot(filtered_df, year_value):
+    filtered_df = pd.read_json(filtered_df, orient="split")
+    return generate_adv_analytic_1(filtered_df, year_value)
+
+
+@app.callback(Output('right_plot', 'figure'),
+    [Input("_filtered_df_stored", "children"),
+     Input('button1', 'n_clicks_timestamp'),
+     Input('button2', 'n_clicks_timestamp'),
+     Input('button3', 'n_clicks_timestamp')])
+def update_output(filtered_df, button1=0, button2=0, button3=0):
+    filtered_df = pd.read_json(filtered_df, orient="split")
+    if int(button1) > int(button2) and int(button1) > int(button3):
+        n_clusters = 3
+    elif int(button2) > int(button1) and int(button2) > int(button3):
+        n_clusters = 5
+    elif int(button3) > int(button1) and int(button3) > int(button2):
+        n_clusters = 10
+    else:
+        n_clusters=10
+    return generate_right_plot(filtered_df, pattern_clustering(filtered_df, n_clusters), n_clusters)
 
 @app.callback(Output("other_plot", "figure"),
-              [Input("dd_song_p3", "value")])
-def update_historical_plot(attribute_value):
-    return generate_adv_analytic_2(df, attribute_value)
+              [Input("_filtered_df_stored", "children"),
+               Input("dd_song_p3", "value")])
+def update_historical_plot(filtered_df, attribute_value):
+    filtered_df = pd.read_json(filtered_df, orient="split")
+    return generate_adv_analytic_2(filtered_df, attribute_value)
 
 ######################################################################################################################
 ################################  LYRICS PAGE  #######################################################################
 ######################################################################################################################
 
 
-@app.callback(Output('offensiveWordsPlot', 'figure'),
-              [Input('ddOffensiveWords', 'value')])
-def update_output_div(input_value):
-    return create_offensive_words_plot(dict_offensive_words, input_value)
+@app.callback(Output("ddOffensiveWords", "options"),
+              [Input("_filtered_offensive_words", "children")])
+def update_options_nima(filtered_dict):
+    dct = json.loads(filtered_dict)
+    options = list(dct.keys())
+    options = create_dd_options(options)
+    return options
+
+
+@app.callback(Output("offensiveWordsPlot", "figure"),
+              [Input("ddOffensiveWords", "value"),
+               Input("_filtered_offensive_words", "children")
+               ])
+def update_output_div(input_value, filtered_dct_offensive_words):
+    dct = json.loads(filtered_dct_offensive_words)
+    return create_offensive_words_plot(dct, input_value, xaxis_type_value="Year")
 
 
 @app.callback(Output('firstAppearance', 'figure'),

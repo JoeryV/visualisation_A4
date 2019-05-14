@@ -267,61 +267,6 @@ def pattern_clustering(dataframe, n_clusters=10):
     tmp_df.loc[:, 'cluster'] = y_kmeans
     return tmp_df
 
-
-# def generate_left_plot(dataframe, n_clusters=10):
-#     means = {}
-#     for cluster in range(n_clusters):
-#         temp = dataframe[dataframe['cluster'] == cluster].drop('cluster', axis=1)
-#
-#         ## Keuze: 2500 voor NaN values
-#         means[cluster] = temp.mean()
-#
-#     data = [go.Scatter(x=means[0].keys(), y=means[cluster].values,
-#                        name='Group {}'.format(cluster),
-#                        ) for cluster in range(n_clusters)]
-#     layout = go.Layout(xaxis=dict(title='Year'),
-#                        yaxis=dict(title='Average rank in Top 2000', range=[2000, 1]),
-#         paper_bgcolor='#FAFAFA',
-#         plot_bgcolor='#FAFAFA',
-#     )
-#     fig = go.Figure(data=data, layout=layout)
-#     return fig
-#
-#
-# def generate_right_plot(df, dataframe, n_clusters=10):
-#     temp = df[df.index.isin(dataframe.index)][
-#         ['speechiness', 'energy', 'danceability', 'valence', 'liveness', 'instrumentalness', 'acousticness']]
-#
-#     result = pd.concat([dataframe['cluster'], temp], axis=1, join='inner')
-#
-#     means_spider = {}
-#     for cluster in range(n_clusters):
-#         temp = result[result['cluster'] == cluster].drop('cluster', axis=1)
-#         means_spider[cluster] = temp.mean()
-#     dataframe = pd.DataFrame(means_spider).T
-#
-#     features = ['danceability', 'energy', 'speechiness', 'acousticness',
-#                 'instrumentalness', 'liveness', 'valence']
-#
-#     data = [go.Scatterpolar(
-#         r=dataframe.iloc[i][features].values,
-#         theta=features, name='Group {}'.format(i),
-#         fill='toself') for i in range(len(dataframe))]
-#     layout = go.Layout(
-#         paper_bgcolor='#FAFAFA',
-#         plot_bgcolor='#FAFAFA',
-#     )
-#
-#     #     layout = go.Layout( polar=dict( radialaxis=dict( visible=True, range=[0, 1]  )  ),  paper_bgcolor='#FAFAF, plot_bgcolor='#FAFAFA', showlegend=False )
-#
-#     fig = go.Figure(data=data, layout=layout)
-#     return fig
-
-
-# Vincent functions
-#TODO vincent's functions need to be updated by song (radar), song & years (rank_plot), song & attribute & years
-# (attribute vs time), additionally it should work with comparing multiple songs
-
 def generate_left_plot(dataframe, n_clusters=10):
     means = {}
     #################################
@@ -382,28 +327,254 @@ def generate_right_plot(df, dataframe, n_clusters=10):
     return fig
 
 
+# def generate_left_plot(dataframe, n_clusters=10):
+#     means = {}
+#     for cluster in range(n_clusters):
+#         temp = dataframe[dataframe['cluster'] == cluster].drop('cluster', axis=1)
+#
+#         ## Keuze: 2500 voor NaN values
+#         means[cluster] = temp.mean()
+#
+#     data = [go.Scatter(x=means[0].keys(), y=means[cluster].values,
+#                        name='Group {}'.format(cluster),
+#                        ) for cluster in range(n_clusters)]
+#     layout = go.Layout(xaxis=dict(title='Year'),
+#                        yaxis=dict(title='Average rank in Top 2000', range=[2000, 1]),
+#         paper_bgcolor='#FAFAFA',
+#         plot_bgcolor='#FAFAFA',
+#     )
+#     fig = go.Figure(data=data, layout=layout)
+#     return fig
+#
+#
+# def generate_right_plot(df, dataframe, n_clusters=10):
+#     temp = df[df.index.isin(dataframe.index)][
+#         ['speechiness', 'energy', 'danceability', 'valence', 'liveness', 'instrumentalness', 'acousticness']]
+#
+#     result = pd.concat([dataframe['cluster'], temp], axis=1, join='inner')
+#
+#     means_spider = {}
+#     for cluster in range(n_clusters):
+#         temp = result[result['cluster'] == cluster].drop('cluster', axis=1)
+#         means_spider[cluster] = temp.mean()
+#     dataframe = pd.DataFrame(means_spider).T
+#
+#     features = ['danceability', 'energy', 'speechiness', 'acousticness',
+#                 'instrumentalness', 'liveness', 'valence']
+#
+#     data = [go.Scatterpolar(
+#         r=dataframe.iloc[i][features].values,
+#         theta=features, name='Group {}'.format(i),
+#         fill='toself') for i in range(len(dataframe))]
+#     layout = go.Layout(
+#         paper_bgcolor='#FAFAFA',
+#         plot_bgcolor='#FAFAFA',
+#     )
+#
+#     #     layout = go.Layout( polar=dict( radialaxis=dict( visible=True, range=[0, 1]  )  ),  paper_bgcolor='#FAFAF, plot_bgcolor='#FAFAFA', showlegend=False )
+#
+#     fig = go.Figure(data=data, layout=layout)
+#     return fig
 
-def create_attributePlot(df, song, attribute):
-    '''Function updates the attribute vs time plot on the first page of the dashboard'''
-    song = song[0]
-    idx = df.index[df['Title'] == song].tolist()[0]
-    source = get_source(attribute)
-    y_vals, time = get_values(df, idx, source, attribute)
 
+# Vincent functions
+#TODO vincent's functions need to be updated by song (radar), song & years (rank_plot), song & attribute & years
+# (attribute vs time), additionally it should work with comparing multiple songs
+
+
+## VINCENT FUNCTIONS
+def get_color(idx):
+    "Fetches a color for a plot"
+    colors = ['rgb(31, 119, 180)', 'rgb(255, 127, 14)',
+             'rgb(44, 160, 44)', 'rgb(214, 39, 40)',
+             'rgb(148, 103, 189)', 'rgb(140, 86, 75)',
+             'rgb(227, 119, 194)', 'rgb(127, 127, 127)',
+             'rgb(188, 189, 34)', 'rgb(23, 190, 207)']
+    return colors[idx]
+
+# Add these two to the function script
+def create_plots(df, songs, years): #, attribute):
+    year_list = ['1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006',
+                 '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014',
+                 '2015', '2016', '2017', '2018']
+
+    features = ['danceability', 'energy', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence']
+
+    get_primary_key = lambda x: (x[:x.rfind('(') - 1], x[x.rfind('(') + 1:-1])
+    primary_keys = [get_primary_key(song) for song in songs]
+    idxs = df[df["primary_key"].isin(primary_keys)].index
+    start, stop = year_list.index(str(years[0])), year_list.index(str(years[1]))
+    rankings = df.loc[idxs, year_list].values[:,start:stop+1]
 
     data = []
-    attribute_trace = go.Scatter(
-        x = time,
-        y = y_vals
+    for trace_nr, ranking in enumerate(rankings):
+        rank_trace = go.Scatter(
+            name = '{} ({})'.format(primary_keys[trace_nr][0], primary_keys[trace_nr][1]),
+            x = year_list[start: stop+1],
+            y = ranking,
+            mode = 'lines+markers',
+            xaxis='x2',
+            yaxis='y2',
+            legendgroup = str(trace_nr),
+            marker = {'color': get_color(trace_nr), 'symbol': 'circle'},
+            showlegend = True
+        )
+        data.append(rank_trace)
+
+    for trace_nr, idx in enumerate(idxs):
+        radar_trace = go.Scatterpolar(
+            r = df.loc[idx, features].values,
+            name='{} ({})'.format(primary_keys[trace_nr][0], primary_keys[trace_nr][1]),
+            theta = features,
+            fill = 'toself',
+            legendgroup = str(trace_nr),
+            mode = 'lines',
+            marker = {'color': get_color(trace_nr), 'symbol': 'circle'},
+            showlegend = False
+        )
+        data.append(radar_trace)
+
+    # source = get_source(attribute)
+    # values, times = [], []
+    # for idx in idxs:
+    #     y_vals, time = get_values(df, idx, source, attribute)
+    #     values.append(y_vals)
+    #     times.append(time)
+
+    # for trace_nr, (vals, time) in enumerate(zip(values, times)):
+    #     attribute_trace = go.Scatter(
+    #         x = time,
+    #         y = vals,
+    #         legendgroup = str(trace_nr),
+    #         mode = 'lines',
+    #         marker = {'color': get_color(trace_nr), 'symbol': 'circle'},
+    #         showlegend=False
+    #     )
+    #     data.append(attribute_trace)
+
+    # xaxis, yaxis = get_time_series_layout_params(attribute, xdomain=[0.75,1], ydomain=[0,1])
+
+    xaxis2 = dict(
+        title='Year',
+        domain = [0,0.5],
+        anchor='y2'
     )
-    data.append(attribute_trace)
+
+    yaxis2 = dict(
+        title='Ranking',
+        autorange='reversed',
+        domain = [0, 1],
+        anchor='x2'
+    )
+
+    if stop-start <5:
+        xaxis2['nticks'] = stop-start+1
+    # if rankings.max()-rankings.min() < 5:
+    #     yaxis2['nticks'] = int(rankings.max()-rankings.min()+1)
+
     layout = go.Layout(
-        title="{} vs. Time".format(attribute.capitalize()),
+
         paper_bgcolor='#FAFAFA',
-        plot_bgcolor='#FAFAFA'
-    )
+        plot_bgcolor='#FAFAFA',
+        # legend=dict(x=0, y=1.4, orientation='h'),
+
+        # # Axes for Attribute plot (time series), defined in line 32
+        # xaxis=xaxis,
+        # yaxis=yaxis,
+
+        # Axes for Rank plot
+        xaxis2 = xaxis2,
+        yaxis2 = yaxis2,
+
+         # Axes for Radar Plot
+        polar = dict(
+
+          # This domain controls the position of the radar plot.  Vals must be between 0 and 1
+          domain = dict(
+            x = [0.5, 1.0],
+            y = [0, 1]
+          ),
+
+          # Controls min and max values for radar plot
+          radialaxis = dict(
+            visible = True,
+            range = [0, 1]
+          ),
+
+          angularaxis = dict(
+            thetaunit = "radians"
+          )
+        ),
+
+        # annotations = [
+        #     # dict(
+        #     # x=0.875,
+        #     # y=1.1,
+        #     # text='{} vs. Time'.format(attribute.capitalize()),
+        #     # xref= "paper",
+        #     # yref= "paper",
+        #     # xanchor= "center",
+        #     # yanchor= "bottom",
+        #     # showarrow= False,
+        #     # font = {
+        #     #     'size': 16
+        #     # }
+        # # ),
+        #     dict(
+        #     x=0.125,
+        #     y=1.1,
+        #     text='Rank of Song by Year',
+        #     xref= "paper",
+        #     yref= "paper",
+        #     xanchor= "center",
+        #     yanchor= "bottom",
+        #     showarrow= False,
+        #     font = {
+        #         'size': 16
+        #     }
+        # ),
+        #     dict(
+        #     x=0.5,
+        #     y=1.1,
+        #     text='Audio Features',
+        #     xref= "paper",
+        #     yref= "paper",
+        #     xanchor= "center",
+        #     yanchor= "bottom",
+        #     showarrow= False,
+        #     font = {
+        #         'size': 16
+        #     }
+        # )
+        # ]
+        )
+
     fig = go.Figure(data=data, layout=layout)
     return fig
+
+
+
+# def create_attributePlot(df, song, attribute):
+#     '''Function updates the attribute vs time plot on the first page of the dashboard'''
+#     song = song[0]
+#     idx = df.index[df['Title'] == song].tolist()[0]
+#     source = get_source(attribute)
+#     y_vals, time = get_values(df, idx, source, attribute)
+#
+#
+#     data = []
+#     attribute_trace = go.Scatter(
+#         x = time,
+#         y = y_vals
+#     )
+#     data.append(attribute_trace)
+#     layout = go.Layout(
+#         title="{} vs. Time".format(attribute.capitalize()),
+#         paper_bgcolor='#FAFAFA',
+#         plot_bgcolor='#FAFAFA'
+#     )
+#     fig = go.Figure(data=data, layout=layout)
+#     return fig
 
 
 def create_radar(currentSong):
@@ -562,7 +733,7 @@ def loser_title(df,number):
 ########################################################################################################################################
 
 ## NIMA FUNCTIONS
-def create_offensive_words_plot(dict_offensive_words, input_value):
+def create_offensive_words_plot(dict_offensive_words, input_value, xaxis_type_value):
     data = []
 
     for off_word in input_value:
@@ -588,6 +759,73 @@ def create_offensive_words_plot(dict_offensive_words, input_value):
 
     fig = {"data":data, "layout":layout}
     return fig
+
+# def create_offensive_words_plot(dict_offensive_words, input_value, xaxis_type_value):
+#     data = []
+#
+#     if xaxis_type_value == "Year":
+#         for off_word in input_value:
+#             artist_list = [item[0] for item in dict_offensive_words[off_word]]
+#             year_list = [item[2] for item in dict_offensive_words[off_word]]
+#             frequency_list = [item[3] for item in dict_offensive_words[off_word]]
+#             title_list = [item[1] for item in dict_offensive_words[off_word]]
+#
+#             sum_frequency_list = []
+#             for name in set(year_list):
+#                 inx_list = [i for i, x in enumerate(year_list) if x == name]
+#                 sum_frequency = sum([frequency_list[number] for number in inx_list])
+#                 sum_frequency_list.append(sum_frequency)
+#
+#             all_titles_list = []
+#             for name in set(year_list):
+#                 inx_list = [i for i, x in enumerate(year_list) if x == name]
+#                 all_titles_list.append(
+#                     " // ".join(['(' + artist_list[number] + ') ' + title_list[number] for number in inx_list]))
+#
+#             trace = go.Bar(x=year_list, y=sum_frequency_list,
+#                            text=all_titles_list,
+#                            name=off_word)
+#             data.append(trace)
+#
+#     else:
+#         for off_word in input_value:
+#             artist_list = [item[0] for item in dict_offensive_words[off_word]]
+#             genre_list = [item[4] for item in dict_offensive_words[off_word]]
+#             frequency_list = [item[3] for item in dict_offensive_words[off_word]]
+#             title_list = [item[1] for item in dict_offensive_words[off_word]]
+#
+#             sum_frequency_list = []
+#             for name in set(genre_list):
+#                 inx_list = [i for i, x in enumerate(genre_list) if x == name]
+#                 sum_frequency = sum([frequency_list[number] for number in inx_list])
+#                 sum_frequency_list.append(sum_frequency)
+#
+#             all_titles_list = []
+#             for name in set(genre_list):
+#                 inx_list = [i for i, x in enumerate(genre_list) if x == name]
+#                 all_titles_list.append(
+#                     " // ".join(['(' + artist_list[number] + ') ' + title_list[number] for number in inx_list]))
+#
+#
+#             trace = go.Bar(x=genre_list, y=sum_frequency_list,
+#                            text=all_titles_list,
+#                            name=off_word)
+#             data.append(trace)
+#
+#     layout = go.Layout(
+#         paper_bgcolor='#FAFAFA',
+#         plot_bgcolor='#FAFAFA',
+#         # showlegend=False,
+#         margin=go.layout.Margin(
+#             l=25,
+#             r=10,
+#             b=25,
+#             t=0
+#         )
+#     )
+#
+#     fig = {"data":data, "layout":layout}
+#     return fig
 
 
 def create_search_words_plot(df_merged_have_lyrics, input_value):
