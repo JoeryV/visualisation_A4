@@ -105,3 +105,28 @@ def load_appearance_options():
     with open(file_location, "rb") as f:
         all_words_lable_value = pickle.load(f)
     return all_words_lable_value
+
+
+def load_wordcloud_data():
+    file_location = os.path.join(data_location, "dic_Artist_wordcloud_v5.pkl")
+    with open(file_location, 'rb') as f:
+        dic_Artist_wordcloud = pickle.load(f)
+
+    file_location = os.path.join(data_location, "all_artist_lable_value.pkl")
+    with open(file_location, 'rb') as f:
+        all_artist_lable_value = pickle.load(f)
+
+    file_location = os.path.join(data_location, "all_genre_lable_value.pkl")
+    with open(file_location, 'rb') as f:
+        all_genre_lable_value = pickle.load(f)
+
+    file_location = os.path.join(data_location, "all_year_lable_value.pkl")
+    with open(file_location, 'rb') as f:
+        all_year_lable_value = pickle.load(f)
+
+    file_location = os.path.join(data_location, "list_dictionary_keys.pkl")
+    with open(file_location, 'rb') as f:
+        list_dictionary_keys = pickle.load(f)
+
+    return (dic_Artist_wordcloud, all_artist_lable_value,
+            all_genre_lable_value, all_year_lable_value, list_dictionary_keys)

@@ -207,7 +207,7 @@ def generate_adv_analytic_1(df, year):
         y=list(count_per_publ_year[count_per_publ_year > 0].values))
     ]
 
-    layout = go.Layout(xaxis=dict(title='Song Publication Year'),
+    layout = go.Layout(xaxis=dict(title='Song Publication Year', range=[1938,2018]),
                        yaxis=dict(title='Number of Songs'),
         # xaxis=dict(range=[1938,2018]),
         # yaxis=dict(range=[0,100]),
@@ -273,7 +273,7 @@ def generate_left_plot(dataframe, n_clusters=10):
     count = 1
     for cluster in range(n_clusters):
         temp = dataframe[dataframe['cluster'] == cluster].drop('cluster', axis=1)
-        if temp.mean().min() < 1900:
+        if temp.mean().min() < 2000:
             ## Keuze: 2500 voor NaN values
             means[count] = temp.mean()
             count += 1
@@ -285,6 +285,7 @@ def generate_left_plot(dataframe, n_clusters=10):
 
     layout = go.Layout(xaxis=dict(title='Year'),
                        yaxis=dict(title='Average rank in Top 2000', range=[2000, 1]),
+                       hovermode=False,
                        paper_bgcolor='#FAFAFA',
                        plot_bgcolor='#FAFAFA',
                        )
@@ -302,7 +303,7 @@ def generate_right_plot(df, dataframe, n_clusters=10):
     count = 1
     for cluster in range(n_clusters):
         temp = result[result['cluster'] == cluster].drop('cluster', axis=1)
-        if temp.mean().min() < 1900:
+        if temp.mean().min() < 2000:
             means_spider[count] = temp.mean()
             count += 1
     #################################
@@ -316,6 +317,7 @@ def generate_right_plot(df, dataframe, n_clusters=10):
         r=dataframe.iloc[i][features].values,
         theta=features, name='Group {}'.format(i + 1),
         fill='toself') for i in range(len(dataframe))]
+    data = data[:-1]
     layout = go.Layout(
         paper_bgcolor='#FAFAFA',
         plot_bgcolor='#FAFAFA',
@@ -733,84 +735,17 @@ def loser_title(df,number):
 ########################################################################################################################################
 
 ## NIMA FUNCTIONS
-def create_offensive_words_plot(dict_offensive_words, input_value, xaxis_type_value):
-    data = []
-
-    for off_word in input_value:
-        trace = go.Bar(x=[item[2] for item in dict_offensive_words[off_word]],
-                       y=[item[3] for item in dict_offensive_words[off_word]],
-                       name=off_word)
-        data.append(trace)
-        # data.append({'x': [item[2] for item in dict_offensive_words[off_word]],
-        #                            'y': [item[3] for item in dict_offensive_words[off_word]], 'type': 'bar',
-        #                            'name': off_word})
-
-    layout = go.Layout(
-        paper_bgcolor='#FAFAFA',
-        plot_bgcolor='#FAFAFA',
-        # showlegend=False,
-        margin=go.layout.Margin(
-            l=25,
-            r=10,
-            b=25,
-            t=0
-        )
-    )
-
-    fig = {"data":data, "layout":layout}
-    return fig
-
 # def create_offensive_words_plot(dict_offensive_words, input_value, xaxis_type_value):
 #     data = []
 #
-#     if xaxis_type_value == "Year":
-#         for off_word in input_value:
-#             artist_list = [item[0] for item in dict_offensive_words[off_word]]
-#             year_list = [item[2] for item in dict_offensive_words[off_word]]
-#             frequency_list = [item[3] for item in dict_offensive_words[off_word]]
-#             title_list = [item[1] for item in dict_offensive_words[off_word]]
-#
-#             sum_frequency_list = []
-#             for name in set(year_list):
-#                 inx_list = [i for i, x in enumerate(year_list) if x == name]
-#                 sum_frequency = sum([frequency_list[number] for number in inx_list])
-#                 sum_frequency_list.append(sum_frequency)
-#
-#             all_titles_list = []
-#             for name in set(year_list):
-#                 inx_list = [i for i, x in enumerate(year_list) if x == name]
-#                 all_titles_list.append(
-#                     " // ".join(['(' + artist_list[number] + ') ' + title_list[number] for number in inx_list]))
-#
-#             trace = go.Bar(x=year_list, y=sum_frequency_list,
-#                            text=all_titles_list,
-#                            name=off_word)
-#             data.append(trace)
-#
-#     else:
-#         for off_word in input_value:
-#             artist_list = [item[0] for item in dict_offensive_words[off_word]]
-#             genre_list = [item[4] for item in dict_offensive_words[off_word]]
-#             frequency_list = [item[3] for item in dict_offensive_words[off_word]]
-#             title_list = [item[1] for item in dict_offensive_words[off_word]]
-#
-#             sum_frequency_list = []
-#             for name in set(genre_list):
-#                 inx_list = [i for i, x in enumerate(genre_list) if x == name]
-#                 sum_frequency = sum([frequency_list[number] for number in inx_list])
-#                 sum_frequency_list.append(sum_frequency)
-#
-#             all_titles_list = []
-#             for name in set(genre_list):
-#                 inx_list = [i for i, x in enumerate(genre_list) if x == name]
-#                 all_titles_list.append(
-#                     " // ".join(['(' + artist_list[number] + ') ' + title_list[number] for number in inx_list]))
-#
-#
-#             trace = go.Bar(x=genre_list, y=sum_frequency_list,
-#                            text=all_titles_list,
-#                            name=off_word)
-#             data.append(trace)
+#     for off_word in input_value:
+#         trace = go.Bar(x=[item[2] for item in dict_offensive_words[off_word]],
+#                        y=[item[3] for item in dict_offensive_words[off_word]],
+#                        name=off_word)
+#         data.append(trace)
+#         # data.append({'x': [item[2] for item in dict_offensive_words[off_word]],
+#         #                            'y': [item[3] for item in dict_offensive_words[off_word]], 'type': 'bar',
+#         #                            'name': off_word})
 #
 #     layout = go.Layout(
 #         paper_bgcolor='#FAFAFA',
@@ -826,6 +761,73 @@ def create_offensive_words_plot(dict_offensive_words, input_value, xaxis_type_va
 #
 #     fig = {"data":data, "layout":layout}
 #     return fig
+
+def create_offensive_words_plot(dict_offensive_words, input_value, xaxis_type_value):
+    data = []
+
+    if xaxis_type_value == "Year":
+        for off_word in input_value:
+            artist_list = [item[0] for item in dict_offensive_words[off_word]]
+            year_list = [item[2] for item in dict_offensive_words[off_word]]
+            frequency_list = [item[3] for item in dict_offensive_words[off_word]]
+            title_list = [item[1] for item in dict_offensive_words[off_word]]
+
+            sum_frequency_list = []
+            for name in set(year_list):
+                inx_list = [i for i, x in enumerate(year_list) if x == name]
+                sum_frequency = sum([frequency_list[number] for number in inx_list])
+                sum_frequency_list.append(sum_frequency)
+
+            all_titles_list = []
+            for name in set(year_list):
+                inx_list = [i for i, x in enumerate(year_list) if x == name]
+                all_titles_list.append(
+                    " // ".join(['(' + artist_list[number] + ') ' + title_list[number] for number in inx_list]))
+
+            trace = go.Bar(x=year_list, y=sum_frequency_list,
+                           text=all_titles_list,
+                           name=off_word)
+            data.append(trace)
+
+    else:
+        for off_word in input_value:
+            artist_list = [item[0] for item in dict_offensive_words[off_word]]
+            genre_list = [item[4] for item in dict_offensive_words[off_word]]
+            frequency_list = [item[3] for item in dict_offensive_words[off_word]]
+            title_list = [item[1] for item in dict_offensive_words[off_word]]
+
+            sum_frequency_list = []
+            for name in set(genre_list):
+                inx_list = [i for i, x in enumerate(genre_list) if x == name]
+                sum_frequency = sum([frequency_list[number] for number in inx_list])
+                sum_frequency_list.append(sum_frequency)
+
+            all_titles_list = []
+            for name in set(genre_list):
+                inx_list = [i for i, x in enumerate(genre_list) if x == name]
+                all_titles_list.append(
+                    " // ".join(['(' + artist_list[number] + ') ' + title_list[number] for number in inx_list]))
+
+
+            trace = go.Bar(x=genre_list, y=sum_frequency_list,
+                           text=all_titles_list,
+                           name=off_word)
+            data.append(trace)
+
+    layout = go.Layout(
+        paper_bgcolor='#FAFAFA',
+        plot_bgcolor='#FAFAFA',
+        # showlegend=False,
+        margin=go.layout.Margin(
+            l=25,
+            r=10,
+            b=25,
+            t=0
+        )
+    )
+
+    fig = {"data":data, "layout":layout}
+    return fig
 
 
 def create_search_words_plot(df_merged_have_lyrics, input_value):

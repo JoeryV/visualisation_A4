@@ -37,7 +37,7 @@ df3 = pattern_clustering(df)
 dict_offensive_words, offensive_word_options = load_data.load_offensive_word_dict()
 df_merged_have_lyrics = load_data.load_df_lyrics()
 all_words_lable_value = load_data.load_appearance_options()
-
+# dic_Artist_wordcloud, all_artist_lable_value, all_genre_lable_value, all_year_lable_value, list_dictionary_keys = load_data.load_wordcloud_data()
 
 attributes = ['tempo', 'key', 'mode', 'time_signature'] #TODO loadness start is not in the new df. Does Vincent want it? If so, add it in,
 genre_options = create_dd_options(df['primary_genre'].dropna().unique())
@@ -793,12 +793,14 @@ p3 = html.Div([
         get_subheader('Pattern Analysis', size=4, className="gs-header gs-text-header"),
 
         html.Div([dcc.Markdown(dedent('''
-        Using this tool, the patterns of the songs can be grouped using a k-means clustering algorithm. 
-        Songs that have similar ranks in different years of the list are grouped. The chart shows the average pattern for each group.
-        Press the different buttons to adjust the k. 
-
-                                        '''))
-                  ],style={"font-size": "120%"},),
+        By clicking on one of these buttons, you decide how many groups to make from the data. A special algorithm will 
+        make sure that significantly different groups are created.
+        
+        The visualisation on the left side shows the song position of typical songs within the group.
+        
+        The visualisation on the right side shows the characteristics of the typical song from the group.
+        '''))
+                  ],style={"font-size": "120%", "margin-left": "5px"},),
 
         html.Div([html.Button('2', id='button1', n_clicks_timestamp=0),
                   html.Button('4', id='button2', n_clicks_timestamp=0),
@@ -900,8 +902,13 @@ p4 = html.Div([
                     "margin": "0 0 0 0",
                     # "width": "100%"
                 },)
-        ], className="six columns")
+        ], className="six columns"),
+
+        # get_subheader("Word cloud", size=3, className="gs-header gs-text-header"),
+        # html.Div(id='my-div'),
+
     ], className="row twelve columns")
+
 
 
 ## THIS WAS THE VERY EXTENSIVE PLOT
@@ -937,6 +944,103 @@ p4 = html.Div([
     style={'display':"none"}
 )
 
+# p4 = html.Div([
+#     Header("Lyric Analysis"),
+#
+#     html.Div([
+#         html.Div([
+#             get_subheader("Appearance of Offensive Words", size=3, className="gs-header gs-text-header"),
+#
+#             html.Div([
+#                 html.Div([html.H6(children="Offensive words: ")], className="three columns"),
+#
+#                 html.Div([
+#                     dcc.Dropdown(
+#                         id='ddOffensiveWords',
+#                         options=offensive_word_options,
+#                         value=['dirty', 'shit', 'sex'],
+#                         multi=True,
+#                         style={"width": "80%"},
+#                     ),
+#                 ], className="nine columns"),
+#             ], className="six columns"),
+#
+#             dcc.Graph(
+#                 id='offensiveWordsPlot',
+#                 figure=create_offensive_words_plot(dict_offensive_words, ['dirty', 'shit', 'sex'], xaxis_type_value="Year"),
+#                 config=config,
+#                 style={
+#                     "margin": "0 0 0 0",
+#                     # "width": "100%"
+#                 },)
+#         ], className="six columns"),
+#
+#         html.Div([
+#             get_subheader("First Appearance of Words", size=3, className="gs-header gs-text-header"),
+#
+#             html.Div([
+#                 html.Div([html.H6(children="Words to search: ")], className="three columns"),
+#
+#                 html.Div([
+#                     dcc.Dropdown(
+#                         id='ddWordSearch',
+#                         options=all_words_lable_value,
+#                         value=['honey', 'heart', 'love'],
+#                         multi=True,
+#                         style={"width": "80%"},
+#                     ),
+#                 ], className="nine columns"),
+#             ], className="six columns"),
+#
+#             dcc.Graph(
+#                 id='firstAppearance',
+#                 figure=create_search_words_plot(df_merged_have_lyrics, ['honey', 'heart','love']),
+#                 config=config,
+#                 style={
+#                     "margin": "0 0 0 0",
+#                     # "width": "100%"
+#                 },)
+#         ], className="six columns"),
+#
+#         # get_subheader("Word cloud", size=3, className="gs-header gs-text-header"),
+#         # html.Div(id='my-div'),
+#
+#     ], className="row twelve columns")
+#
+#
+#
+# ## THIS WAS THE VERY EXTENSIVE PLOT
+#     # dcc.Markdown(children=markdown_text),
+#     # dcc.Graph(
+#     #     id='word-count-vs-year-all',
+#     #     figure={
+#     #         'data': [
+#     #             go.Scatter(
+#     #                 y=df_lyrics[df_lyrics['Artist'] == i]['lyrics_word_count'],
+#     #                 x=df_lyrics[df_lyrics['Artist'] == i]['Year'],
+#     #                 text=df_lyrics[df_lyrics['Artist'] == i]['Title'],
+#     #                 mode='markers',
+#     #                 opacity=0.6,
+#     #                 marker={
+#     #                     'size': 10,
+#     #                     'line': {'width': 0.5, 'color': 'white'}
+#     #                 },
+#     #                 name=i
+#     #             ) for i in sorted(df_lyrics.Artist.unique())
+#     #         ],
+#     #         'layout': go.Layout(
+#     #             yaxis={'type': 'log', 'title': 'number of words in song'},
+#     #             xaxis={'title': 'song release year'},
+#     #             margin={'l': 100, 'b': 40, 't': 10, 'r': 10},
+#     #             legend={'x': 1, 'y': 1},
+#     #             hovermode='closest'
+#     #         )
+#     #     }
+#     # ),
+# ],
+#     id="tab_id_4",
+#     style={'display':"none"}
+# )
 
 
 
@@ -1404,6 +1508,74 @@ def update_output_div(input_value, filtered_dct_offensive_words):
               [Input('ddWordSearch', 'value')])
 def update_output_div(input_value):
     return create_search_words_plot(df_merged_have_lyrics, input_value)
+
+
+# @app.callback(
+#     Output(component_id='my-div', component_property='children'),
+#     [Input(component_id='ddArtist', component_property='value'),
+#      Input(component_id='ddGenre', component_property='value'),
+#      Input(component_id='releaseYearSlider', component_property='value')]
+# )
+# ## create the visualization based on the input value and pass it as output children component for my_div
+#
+# def update_output_div(input_artist, input_genre, input_year):
+#     ## create a tuple from input values to be used as key for the dictionary of word clouds
+#     temp_tuple_input = tuple(list(item for item in [input_artist, input_year, input_genre] if item != None))
+#
+#     ## convert one input from tuple to format that is acceptable for dictionary of word clouds keys
+#     if len(temp_tuple_input) == 1:
+#
+#         if type(temp_tuple_input[0]) == int:
+#             temp_tuple_input = int(temp_tuple_input[0])
+#
+#         elif type(temp_tuple_input[0]) == str:
+#             temp_tuple_input = temp_tuple_input[0]
+#
+#     if temp_tuple_input in list_dictionary_keys:
+#
+#         ## get the values related to plot the wordcloud
+#
+#         word_cloud = dic_Artist_wordcloud[temp_tuple_input][1]
+#         length = dic_Artist_wordcloud[temp_tuple_input][2]
+#         colors = dic_Artist_wordcloud[temp_tuple_input][3]
+#         weights = dic_Artist_wordcloud[temp_tuple_input][4]
+#
+#     else:
+#         temp_tuple_input = ('pink', 'blues')
+#         word_cloud = dic_Artist_wordcloud[temp_tuple_input][1]
+#         length = dic_Artist_wordcloud[temp_tuple_input][2]
+#         colors = dic_Artist_wordcloud[temp_tuple_input][3]
+#         weights = dic_Artist_wordcloud[temp_tuple_input][4]
+#
+#     return (html.Div([
+#
+#         dcc.Markdown(children="""## words cloud
+#     In this graph you can see that higher frequncy words apeear in bigger font size"""),
+#
+#         dcc.Graph(
+#             id='word-cloud',
+#             figure={
+#                 'data':
+#                     [
+#                         go.Scatter(
+#                             x=[random.random() for i in range(length)],
+#                             y=[random.random() for i in range(length)],
+#                             mode='text',
+#                             text=list(word_cloud.words_.keys()),
+#                             hoverinfo='text',
+#                             marker={'opacity': 0.3},
+#                             textfont={'size': weights,
+#                                       'color': colors}
+#                         )],
+#
+#                 # 'color':  colors,
+#                 'layout': go.Layout(
+#                     xaxis={'showgrid': False, 'showticklabels': False, 'zeroline': False},
+#                     yaxis={'showgrid': False, 'showticklabels': False, 'zeroline': False}
+#                 )
+#             }
+#         )
+#     ]))
 
 
 if __name__ == '__main__':
