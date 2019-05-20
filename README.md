@@ -1,6 +1,6 @@
 # Visualisation Assignment 4
 
-Code in this directory is the result of a  dashboard our school group developed for the course "Data Visualisation" at the Jheronimus Academy of Data Science (JADS).
+Code in this directory is the result of a dashboard our group designed for a school assignment for the course "Data Visualisation" at the Jheronimus Academy of Data Science ([JADS](https://www.jads.nl)).
 
 The purpose of this assignment was to develop a dashboard which allows for interactive browsing through data. 
 
@@ -35,9 +35,14 @@ Lyric analysis page:
 Data used in this assignment were gathered from the [Wikipedia Top2000 page](https://nl.wikipedia.org/wiki/Lijst_van_Radio_2-Top_2000%27s) and extended using Spotify WEB API's python library [Spotipy](https://spotipy.readthedocs.io/en/latest/)
 
 ##### How to run 
-The assumption is that the program is run inside a virtual environment containing the data folder. 
+In order to make the app work in full, one has to acquire spotify API creditials which can be obtained following the process [here](https://developer.spotify.com/documentation/general/guides/authorization-guide/). The credentials should then be saved in the Code folder in a file called "token_files.py". An example of it is available under the Code folder.
+ 
+The dashboard will run without the spotify API credentials but features such as playing a song and updating images will be unavailable. 
+
+The dashboard can be fired up by either: 
+1. running it inside a virtual environment containing the data folder or 
+2. updating the "data_location" variable in the [load_data.py](./Code/load_data.py) file to absolute path of the folder containing the data. 
 
 The app is built on the packages and versions listed in requirements.txt
 
 Make the dashboard run on your local machine by executing app.py 
-
