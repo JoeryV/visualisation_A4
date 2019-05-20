@@ -32,6 +32,3 @@ tabs = dcc.Tabs(
     style=tab_style(vertical),
     className='custom-tabs-container'
 )
-
-
-

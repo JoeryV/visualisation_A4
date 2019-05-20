@@ -490,3 +490,542 @@ external_js = [
 
 for js in external_js:
     app.scripts.append_script({"external_url": js})
+
+########################################################################################################################################
+########################################################################################################################################
+########################################################################################################################################
+
+## NIMA FUNCTIONS
+# def create_offensive_words_plot(dict_offensive_words, input_value, xaxis_type_value):
+#     data = []
+#
+#     for off_word in input_value:
+#         trace = go.Bar(x=[item[2] for item in dict_offensive_words[off_word]],
+#                        y=[item[3] for item in dict_offensive_words[off_word]],
+#                        name=off_word)
+#         data.append(trace)
+#         # data.append({'x': [item[2] for item in dict_offensive_words[off_word]],
+#         #                            'y': [item[3] for item in dict_offensive_words[off_word]], 'type': 'bar',
+#         #                            'name': off_word})
+#
+#     layout = go.Layout(
+#         paper_bgcolor='#FAFAFA',
+#         plot_bgcolor='#FAFAFA',
+#         # showlegend=False,
+#         margin=go.layout.Margin(
+#             l=25,
+#             r=10,
+#             b=25,
+#             t=0
+#         )
+#     )
+#
+#     fig = {"data":data, "layout":layout}
+#     return fig
+
+# def create_attributePlot(df, song, attribute):
+#     '''Function updates the attribute vs time plot on the first page of the dashboard'''
+#     song = song[0]
+#     idx = df.index[df['Title'] == song].tolist()[0]
+#     source = get_source(attribute)
+#     y_vals, time = get_values(df, idx, source, attribute)
+#
+#
+#     data = []
+#     attribute_trace = go.Scatter(
+#         x = time,
+#         y = y_vals
+#     )
+#     data.append(attribute_trace)
+#     layout = go.Layout(
+#         title="{} vs. Time".format(attribute.capitalize()),
+#         paper_bgcolor='#FAFAFA',
+#         plot_bgcolor='#FAFAFA'
+#     )
+#     fig = go.Figure(data=data, layout=layout)
+#     return fig
+
+
+# def generate_left_plot(dataframe, n_clusters=10):
+#     means = {}
+#     for cluster in range(n_clusters):
+#         temp = dataframe[dataframe['cluster'] == cluster].drop('cluster', axis=1)
+#
+#         ## Keuze: 2500 voor NaN values
+#         means[cluster] = temp.mean()
+#
+#     data = [go.Scatter(x=means[0].keys(), y=means[cluster].values,
+#                        name='Group {}'.format(cluster),
+#                        ) for cluster in range(n_clusters)]
+#     layout = go.Layout(xaxis=dict(title='Year'),
+#                        yaxis=dict(title='Average rank in Top 2000', range=[2000, 1]),
+#         paper_bgcolor='#FAFAFA',
+#         plot_bgcolor='#FAFAFA',
+#     )
+#     fig = go.Figure(data=data, layout=layout)
+#     return fig
+#
+#
+# def generate_right_plot(df, dataframe, n_clusters=10):
+#     temp = df[df.index.isin(dataframe.index)][
+#         ['speechiness', 'energy', 'danceability', 'valence', 'liveness', 'instrumentalness', 'acousticness']]
+#
+#     result = pd.concat([dataframe['cluster'], temp], axis=1, join='inner')
+#
+#     means_spider = {}
+#     for cluster in range(n_clusters):
+#         temp = result[result['cluster'] == cluster].drop('cluster', axis=1)
+#         means_spider[cluster] = temp.mean()
+#     dataframe = pd.DataFrame(means_spider).T
+#
+#     features = ['danceability', 'energy', 'speechiness', 'acousticness',
+#                 'instrumentalness', 'liveness', 'valence']
+#
+#     data = [go.Scatterpolar(
+#         r=dataframe.iloc[i][features].values,
+#         theta=features, name='Group {}'.format(i),
+#         fill='toself') for i in range(len(dataframe))]
+#     layout = go.Layout(
+#         paper_bgcolor='#FAFAFA',
+#         plot_bgcolor='#FAFAFA',
+#     )
+#
+#     #     layout = go.Layout( polar=dict( radialaxis=dict( visible=True, range=[0, 1]  )  ),  paper_bgcolor='#FAFAF, plot_bgcolor='#FAFAFA', showlegend=False )
+#
+#     fig = go.Figure(data=data, layout=layout)
+#     return fig
+
+
+# # Casper functions
+# def generate_adv_analytic_1(df, year):
+#     year = str(year)
+#     count_per_publ_year = df.loc[df[year] > 0, "Year"].value_counts().sort_index()
+#
+#     data = [go.Bar(
+#         name="Based on Top2000 year {}".format(year),
+#         x=list(count_per_publ_year[count_per_publ_year > 0].index),
+#         y=list(count_per_publ_year[count_per_publ_year > 0].values))
+#     ]
+#
+#     layout = go.Layout(
+#         # xaxis=dict(range=[1938,2018]),
+#         # yaxis=dict(range=[0,100]),
+#         # title='Number of songs per Publication Year',
+#         paper_bgcolor='#FAFAFA',
+#         plot_bgcolor='#FAFAFA',
+#         margin=go.layout.Margin(
+#             l=10,
+#             r=10,
+#             b=20,
+#             t=0
+#         )
+#     )
+#
+#     fig = dict(data=data, layout=layout)
+#     return fig
+#
+#
+# def generate_adv_analytic_2(df, attribute):
+#     df['AVG_' + attribute] = df.groupby('Year')[attribute].transform('mean')
+#     temp = df.groupby(['Year', 'AVG_' + attribute]).size().reset_index().rename(columns={0: 'count'})
+#     data = [go.Bar(x=list(temp.Year.values),
+#                    y=list(temp['AVG_' + attribute].values),
+#                    visible=True,
+#                    name=attribute)
+#             ]
+#     layout = dict(  # title='Publication year averages',
+#         showlegend=False,
+#         paper_bgcolor='#FAFAFA',
+#         plot_bgcolor='#FAFAFA',
+#         margin=go.layout.Margin(
+#             l=10,
+#             r=30,
+#             b=20,
+#             t=0
+#         )
+#     )
+#
+#     fig = dict(data=data, layout=layout)
+#     return (fig)
+#
+# def pattern_clustering(dataframe, n_clusters=10):
+#     """ Clusters patterns, adds column to the dataframe containing the cluster number of the respective row"""
+#     ## Clean dataframe
+#     years = [str(i) for i in range(1999, 2019)]
+#     tmp_df = copy(dataframe)
+#     for year in years:
+#         tmp_df.loc[tmp_df[year] == 0, year] = 2500
+#         tmp_df.loc[tmp_df[year].isnull(), year] = 2500
+#     tmp_df = tmp_df[years]
+#
+#     kmeans = KMeans(n_clusters=n_clusters)
+#     kmeans.fit(tmp_df)
+#     y_kmeans = kmeans.predict(tmp_df)
+#     tmp_df.loc[:, 'cluster'] = y_kmeans
+#     return (tmp_df)
+#
+#
+# def generate_left_plot(dataframe, n_clusters=10):
+#     means = {}
+#     for cluster in range(n_clusters):
+#         temp = dataframe[dataframe['cluster'] == cluster].drop('cluster', axis=1)
+#
+#         ## Keuze: 2500 voor NaN values
+#         means[cluster] = temp.mean()
+#
+#     data = [go.Scatter(x=means[0].keys(), y=means[cluster].values, name='Cluster {}'.format(cluster),
+#                        ) for cluster in range(n_clusters)]
+#     layout = go.Layout(
+#         yaxis=dict(autorange='reversed'),
+#         paper_bgcolor='#FAFAFA',
+#         plot_bgcolor='#FAFAFA',
+#     )
+#     fig = go.Figure(data=data, layout=layout)
+#     return (fig)
+#
+#
+# def generate_right_plot(df, dataframe, n_clusters=10):
+#     temp = df[df.index.isin(dataframe.index)][
+#         ['speechiness', 'energy', 'danceability', 'valence', 'liveness', 'instrumentalness', 'acousticness']]
+#
+#     result = pd.concat([dataframe['cluster'], temp], axis=1, join='inner')
+#
+#     means_spider = {}
+#     for cluster in range(n_clusters):
+#         temp = result[result['cluster'] == cluster].drop('cluster', axis=1)
+#         means_spider[cluster] = temp.mean()
+#     dataframe = pd.DataFrame(means_spider).T
+#
+#     features = ['danceability', 'energy', 'speechiness', 'acousticness',
+#                 'instrumentalness', 'liveness', 'valence']
+#
+#     data = [go.Scatterpolar(
+#         r=dataframe.iloc[i][features].values,
+#         theta=features, name='Cluster {}'.format(i),
+#         fill='toself') for i in range(len(dataframe))]
+#     layout = go.Layout(
+#         paper_bgcolor='#FAFAFA',
+#         plot_bgcolor='#FAFAFA',
+#     )
+#
+#
+#     #     layout = go.Layout( polar=dict( radialaxis=dict( visible=True, range=[0, 1]  )  ),  paper_bgcolor='#FAFAF, plot_bgcolor='#FAFAFA', showlegend=False )
+#
+#     fig = go.Figure(data=data, layout=layout)
+#     return fig
+
+# p3 = html.Div([
+#     Header("Advanced Analytics"),
+#
+#     # Header left & Header right
+#     html.Div([
+#         html.Div([get_subheader("Number of songs per publication year", size=3, className="gs-header gs-text-header")],
+#                  style={"width": "47%"}, className="six columns"),
+#         html.Div([get_subheader("Publication year averages", size=3, className="gs-header gs-text-header")],
+#                  style={"width": "48%", 'float': 'right'}, className="six_columns"),
+#     ], className="row twelve columns"),
+#
+#     # Slider & Dropdown
+#     html.Div([
+#         # year slider
+#         html.Div([
+#             html.Div([html.H6(children="Top2000 Year: ")], style={"padding": "20 0 0 20"}, className="three columns"),
+#
+#             # The RangeSlider to select the years
+#             html.Div([
+#                 dcc.Slider(
+#                     id="yearSlider",
+#                     min=1999,
+#                     max=2018,
+#                     marks={k: v for k, v in generate_year_options(df).items() if int(k) % 2 == 1},
+#                     ## select only odd years
+#                     step=1,
+#                     value=2018,
+#                     updatemode='drag',
+#                 )
+#             ], style={"width": "71%"}, className="nine columns")
+#         ], className="six columns"),  #### row twelve columns
+#
+#         # dropdown menu
+#         html.Div([
+#             html.Div([html.H6(children="Inspect attribute: ")], className="three columns"),
+#
+#             html.Div([
+#                 dcc.Dropdown(
+#                     id="dd_song_p3",
+#                     options=create_dd_options(p3_col_options),
+#                     value="danceability",
+#                     multi=False,
+#                     style={"width": "80%"},
+#                 ),
+#             ], className="nine columns"),
+#         ], className="six columns"),  ##### row twelve columns
+#     ]),
+#
+#     # Historical & Other plot
+#     html.Div([
+#         html.Div([
+#             dcc.Graph(id='historical_plot',
+#                       figure=generate_adv_analytic_1(df, 2018),
+#                       config=config,
+#                       style={
+#                           "margin": "0 0 0 0",
+#                           # "width": "100%"
+#                       },
+#                       )
+#         ], className="six columns"),
+#         html.Div([
+#             dcc.Graph(id='other_plot',
+#                       figure=generate_adv_analytic_2(df, 'danceability'),
+#                       config=config,
+#                       style={
+#                           "margin": "0 0 10 0",
+#                           # 'width': '100%'
+#                       },
+#                       )
+#         ], className="six columns"),
+#     ], className="row twelve columns"),
+#
+#     # pattern analysis title + markdown text
+#     html.Div([
+#         get_subheader('Pattern Analysis', size=4, className="gs-header gs-text-header"),
+#
+#         html.Div([dcc.Markdown(dedent('''
+#
+#
+#
+#         Introduction/exlpanation to come. Possibly also add input for number of clusters
+#
+#
+#                                         '''))]),
+#
+#     ], className="row twelve columns"),
+#
+#     # row contains left and right plot for the second row of visualisations
+#     html.Div([
+#         # the left plot
+#         html.Div([
+#             dcc.Graph(id='left_plot',
+#                       figure=generate_left_plot(df3),
+#                       style={
+#                           "margin": "0 0 0 0",
+#                           # 'width': '100%'
+#                       },
+#                       ),
+#         ], className="six columns"),
+#         # style={'width': '45%', 'display': 'inline-block', 'float': 'left',
+#         #        'border': 'thin lightgrey solid', 'padding': '10 10 1=0 10'}
+#
+#         # the right plot
+#         html.Div([
+#             dcc.Graph(id='right_plot',
+#                       figure=generate_right_plot(df, df3),
+#                       style={
+#                           "margin": "0 0 10 0",
+#                           # 'width': '100%'
+#                       },
+#                       )
+#         ], className="six columns")
+#         # style={'width': '45%', 'display': 'inline-block', 'float': 'right',
+#         #            'border': 'thin lightgrey solid'}),  # , 'padding': '10 10 10 10'
+#
+#     ], className="row twelve columns"),
+#
+# ],
+#     id="tab_id_3",
+#     style={'display':"none"}
+# )
+
+# p4 = html.Div([
+#     Header("Lyric Analysis"),
+#
+#     html.Div([
+#         html.Div([
+#             get_subheader("Appearance of Offensive Words", size=3, className="gs-header gs-text-header"),
+#
+#             html.Div([
+#                 html.Div([html.H6(children="Offensive words: ")], className="three columns"),
+#
+#                 html.Div([
+#                     dcc.Dropdown(
+#                         id='ddOffensiveWords',
+#                         options=offensive_word_options,
+#                         value=['dirty', 'shit', 'sex'],
+#                         multi=True,
+#                         style={"width": "80%"},
+#                     ),
+#                 ], className="nine columns"),
+#             ], className="six columns"),
+#
+#             dcc.Graph(
+#                 id='offensiveWordsPlot',
+#                 figure=create_offensive_words_plot(dict_offensive_words, ['dirty', 'shit', 'sex'], xaxis_type_value="Year"),
+#                 config=config,
+#                 style={
+#                     "margin": "0 0 0 0",
+#                     # "width": "100%"
+#                 },)
+#         ], className="six columns"),
+#
+#         html.Div([
+#             get_subheader("First Appearance of Words", size=3, className="gs-header gs-text-header"),
+#
+#             html.Div([
+#                 html.Div([html.H6(children="Words to search: ")], className="three columns"),
+#
+#                 html.Div([
+#                     dcc.Dropdown(
+#                         id='ddWordSearch',
+#                         options=all_words_lable_value,
+#                         value=['honey', 'heart', 'love'],
+#                         multi=True,
+#                         style={"width": "80%"},
+#                     ),
+#                 ], className="nine columns"),
+#             ], className="six columns"),
+#
+#             dcc.Graph(
+#                 id='firstAppearance',
+#                 figure=create_search_words_plot(df_merged_have_lyrics, ['honey', 'heart','love']),
+#                 config=config,
+#                 style={
+#                     "margin": "0 0 0 0",
+#                     # "width": "100%"
+#                 },)
+#         ], className="six columns"),
+#
+#         # get_subheader("Word cloud", size=3, className="gs-header gs-text-header"),
+#         # html.Div(id='my-div'),
+#
+#     ], className="row twelve columns")
+#
+#
+#
+# ## THIS WAS THE VERY EXTENSIVE PLOT
+#     # dcc.Markdown(children=markdown_text),
+#     # dcc.Graph(
+#     #     id='word-count-vs-year-all',
+#     #     figure={
+#     #         'data': [
+#     #             go.Scatter(
+#     #                 y=df_lyrics[df_lyrics['Artist'] == i]['lyrics_word_count'],
+#     #                 x=df_lyrics[df_lyrics['Artist'] == i]['Year'],
+#     #                 text=df_lyrics[df_lyrics['Artist'] == i]['Title'],
+#     #                 mode='markers',
+#     #                 opacity=0.6,
+#     #                 marker={
+#     #                     'size': 10,
+#     #                     'line': {'width': 0.5, 'color': 'white'}
+#     #                 },
+#     #                 name=i
+#     #             ) for i in sorted(df_lyrics.Artist.unique())
+#     #         ],
+#     #         'layout': go.Layout(
+#     #             yaxis={'type': 'log', 'title': 'number of words in song'},
+#     #             xaxis={'title': 'song release year'},
+#     #             margin={'l': 100, 'b': 40, 't': 10, 'r': 10},
+#     #             legend={'x': 1, 'y': 1},
+#     #             hovermode='closest'
+#     #         )
+#     #     }
+#     # ),
+# ],
+#     id="tab_id_4",
+#     style={'display':"none"}
+# )
+
+
+# @app.callback(Output("rankPlot", "figure"),
+#               [#Input("_filtered_df_stored", "children"),
+#                Input("dd_song_p1", "value"),
+#                Input("yearRange_p1", "value"),
+#                ])
+# def update_rankplot(songname, years): #df,
+#     # df = pd.read_json(df, orient="split")
+#     return create_rank_plot(df, songname, years)
+#
+#
+# @app.callback(Output("radarPlot", "figure"),
+#               [Input("_current_song_stored", "children")])
+# def update_radarplot(current_song):
+#     current_song = pd.read_json(current_song, orient="split")
+#     return create_radar(current_song)
+#
+#
+# @app.callback(Output("attributePlot", "figure"),
+#               [Input("dd_song_p1", "value"),
+#                Input("dd_attribute", "value"),
+#                ])
+# def update_attributePlot(songname, attribute):
+#     '''Not using filtered df here so we can cut the size of that df.
+#     This one will always be based on the songname anyway '''
+#     return create_attributePlot(df, songname, attribute)
+#
+
+
+# @app.callback(
+#     Output(component_id='my-div', component_property='children'),
+#     [Input(component_id='ddArtist', component_property='value'),
+#      Input(component_id='ddGenre', component_property='value'),
+#      Input(component_id='releaseYearSlider', component_property='value')]
+# )
+# ## create the visualization based on the input value and pass it as output children component for my_div
+#
+# def update_output_div(input_artist, input_genre, input_year):
+#     ## create a tuple from input values to be used as key for the dictionary of word clouds
+#     temp_tuple_input = tuple(list(item for item in [input_artist, input_year, input_genre] if item != None))
+#
+#     ## convert one input from tuple to format that is acceptable for dictionary of word clouds keys
+#     if len(temp_tuple_input) == 1:
+#
+#         if type(temp_tuple_input[0]) == int:
+#             temp_tuple_input = int(temp_tuple_input[0])
+#
+#         elif type(temp_tuple_input[0]) == str:
+#             temp_tuple_input = temp_tuple_input[0]
+#
+#     if temp_tuple_input in list_dictionary_keys:
+#
+#         ## get the values related to plot the wordcloud
+#
+#         word_cloud = dic_Artist_wordcloud[temp_tuple_input][1]
+#         length = dic_Artist_wordcloud[temp_tuple_input][2]
+#         colors = dic_Artist_wordcloud[temp_tuple_input][3]
+#         weights = dic_Artist_wordcloud[temp_tuple_input][4]
+#
+#     else:
+#         temp_tuple_input = ('pink', 'blues')
+#         word_cloud = dic_Artist_wordcloud[temp_tuple_input][1]
+#         length = dic_Artist_wordcloud[temp_tuple_input][2]
+#         colors = dic_Artist_wordcloud[temp_tuple_input][3]
+#         weights = dic_Artist_wordcloud[temp_tuple_input][4]
+#
+#     return (html.Div([
+#
+#         dcc.Markdown(children="""## words cloud
+#     In this graph you can see that higher frequncy words apeear in bigger font size"""),
+#
+#         dcc.Graph(
+#             id='word-cloud',
+#             figure={
+#                 'data':
+#                     [
+#                         go.Scatter(
+#                             x=[random.random() for i in range(length)],
+#                             y=[random.random() for i in range(length)],
+#                             mode='text',
+#                             text=list(word_cloud.words_.keys()),
+#                             hoverinfo='text',
+#                             marker={'opacity': 0.3},
+#                             textfont={'size': weights,
+#                                       'color': colors}
+#                         )],
+#
+#                 # 'color':  colors,
+#                 'layout': go.Layout(
+#                     xaxis={'showgrid': False, 'showticklabels': False, 'zeroline': False},
+#                     yaxis={'showgrid': False, 'showticklabels': False, 'zeroline': False}
+#                 )
+#             }
+#         )
+#     ]))

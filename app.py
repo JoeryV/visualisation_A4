@@ -11,37 +11,34 @@ CSS in Dash: https://dash.plot.ly/external-resources
 
 import dash
 import json
-import numpy as np
-import pandas as pd
 import dash_core_components as dcc
 
 from Code.functions import *
 from textwrap import dedent
 from Code import elements, load_data
+
 from dash.dependencies import Input, Output
 
-
+# Instantiate Dash app
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-config= {'displayModeBar': False, 'showLink' : False}
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 app.scripts.config.serve_locally = True
-
-# global variables
 app.title = "Top 2000"
-vertical = True
 
-
+# Loading data
 df = load_data.load_small_full_file()
-# df_lyrics = load_data.load_df_lyrics()
 df3 = pattern_clustering(df)
-dict_offensive_words, offensive_word_options = load_data.load_offensive_word_dict()
 df_merged_have_lyrics = load_data.load_df_lyrics()
 all_words_lable_value = load_data.load_appearance_options()
-# dic_Artist_wordcloud, all_artist_lable_value, all_genre_lable_value, all_year_lable_value, list_dictionary_keys = load_data.load_wordcloud_data()
+dict_offensive_words, offensive_word_options = load_data.load_offensive_word_dict()
+config= {'displayModeBar': False, 'showLink' : False}
 
-attributes = ['tempo', 'key', 'mode', 'time_signature'] #TODO loadness start is not in the new df. Does Vincent want it? If so, add it in,
+# Preparing dropdown options
+attributes = ['tempo', 'key', 'mode', 'time_signature']
+
 genre_options = create_dd_options(df['primary_genre'].dropna().unique())
 genre_options.append({"label": "all genres", "value": ""})
+
 artist_options = create_dd_options(df["Artist"].dropna().unique())
 artist_options.append({"label": "all artists", "value": ""})
 
@@ -56,20 +53,7 @@ markdown_text = '''## How many words sangs in each song title?
 In this graph you can see that for each artist how many words are used in a song lyric. It excludes stopwords
 '''
 
-
-placeholder = html.Div([
-    html.H3('Tab content 1'),
-    dcc.Graph(
-        id='graph-1-tabs',
-        figure={
-            'data': [{
-                'x': [1, 2, 3],
-                'y': [3, 1, 2],
-                'type': 'bar'
-            }]
-        }
-    )
-])
+# Dashboard pages
 
 p1 = html.Div([
     Header("Pick your song", 3),
@@ -79,7 +63,6 @@ p1 = html.Div([
         html.Div([html.H6(children="Song: ")], className="one columns"),
 
         # The dropdown to select the song
-        #TODO update this dropdown based on the global params
         html.Div([
             dcc.Dropdown(
                 id="dd_song_p1",
@@ -87,13 +70,12 @@ p1 = html.Div([
                 value=["Bohemian Rhapsody (Queen)"],
                 multi=True,
                 style={"width": "80%"},
-                ),
+            ),
         ], className="eleven columns"),
 
     ], className="row twelve columns"),
 
     # This row contains the Attribute Dropdown
-    #TODO update this dropdown based on the global params
     # html.Div([
     #     html.Div([html.H6(children="Attribute: ")], className="one columns"),
     #
@@ -153,7 +135,8 @@ p1 = html.Div([
 
                 html.A(
                     id="playButton",
-                    href=["https://p.scdn.co/mp3-preview/d1ff0ba5c5538ca2c50b808aab2278253c98b038?cid=3c49fddc0db74e098cf098070532f4b5"],
+                    href=[
+                        "https://p.scdn.co/mp3-preview/d1ff0ba5c5538ca2c50b808aab2278253c98b038?cid=3c49fddc0db74e098cf098070532f4b5"],
                     children=html.Img(src="http://pluspng.com/img-png/play-button-png-play-button-png-picture-1024.png",
                                       style={
                                           "height": "100%",
@@ -186,7 +169,7 @@ p1 = html.Div([
 
 Thank you for your understanding, \n
 The Top 2000 Team''')),
-                ], style={"margin-left": "10px", "font-size": "120%"})
+            ], style={"margin-left": "10px", "font-size": "120%"})
         ], className='six columns',
         ),
 
@@ -195,7 +178,7 @@ The Top 2000 Team''')),
         get_subheader('Visualisations', size=4, className="gs-header gs-text-header"),
         dcc.Graph(
             id="megaPlot",
-            figure=create_plots(df, [df.display_value[0]], (1999, 2018)), #,"tempo"
+            figure=create_plots(df, [df.display_value[0]], (1999, 2018)),  # ,"tempo"
             config=config,
             style={"margin": "0 0 0 0"},
             className="twelve columns"
@@ -228,11 +211,7 @@ The Top 2000 Team''')),
     #
     # ], className='row twelve columns')
 ],
-id="tab_id_1",)
-
-#######################################################################################################################
-############################################################# Fun facts ###############################################
-#######################################################################################################################
+    id="tab_id_1", )
 
 
 p2 = html.Div([
@@ -247,29 +226,29 @@ p2 = html.Div([
 
                 # Subrow contains the image + name + amount of times won
                 html.Div([
-                    html.H2(children = "1.",
-                            style={"margin": "0 0 0 0",},
+                    html.H2(children="1.",
+                            style={"margin": "0 0 0 0", },
                             className="one columns",
                             ),
 
                     # Image of Best Artist
                     html.Img(
                         id="Best_artist_image",
-                        src=df.loc[df["Artist"] == best_artist_name(df,0)]["artist_image"].iloc[0],
+                        src=df.loc[df["Artist"] == best_artist_name(df, 0)]["artist_image"].iloc[0],
                         style={"margin": "0 0 50px 0"},
                         className="two columns",
                     ),
 
                     # Name of best artist
-                    html.H5(id="best_artist_name_change", children=best_artist_name(df,0),
-                            style={"margin": "0 0 0 0",},
+                    html.H5(id="best_artist_name_change", children=best_artist_name(df, 0),
+                            style={"margin": "0 0 0 0", },
                             className="nine columns",
                             ),
 
                     # The amount of times the artist has been in the list
                     html.H5(id="best_artist_count",
-                            children="{} times in the list".format(best_artist_count(df,0)),
-                            style={"margin": "0 0 0 0",},
+                            children="{} times in the list".format(best_artist_count(df, 0)),
+                            style={"margin": "0 0 0 0", },
                             className="nine columns",
                             ),
                 ],
@@ -278,29 +257,29 @@ p2 = html.Div([
                 # Subrow contains the image + name + amount of times won
                 html.Div([
 
-                    html.H2(children = "2.",
-                            style={"margin": "0 0 0 0",},
+                    html.H2(children="2.",
+                            style={"margin": "0 0 0 0", },
                             className="one columns",
                             ),
 
                     # Image of Best Artist
                     html.Img(
                         id="Best_artist_image2",
-                        src=df.loc[df["Artist"] == best_artist_name(df,1)]["artist_image"].iloc[0],
+                        src=df.loc[df["Artist"] == best_artist_name(df, 1)]["artist_image"].iloc[0],
                         style={"margin": "0 0 50px 0"},
                         className="two columns",
                     ),
 
                     # Name of best artist
-                    html.H5(id="best_artist_name_change2", children=best_artist_name(df,1),
-                            style={"margin": "0 0 0 0",},
+                    html.H5(id="best_artist_name_change2", children=best_artist_name(df, 1),
+                            style={"margin": "0 0 0 0", },
                             className="nine columns",
                             ),
 
                     # The amount of times the artist has been in the list
                     html.H5(id="best_artist_count2",
-                            children="{} times in the list".format(best_artist_count(df,1)),
-                            style={"margin": "0 0 0 0",},
+                            children="{} times in the list".format(best_artist_count(df, 1)),
+                            style={"margin": "0 0 0 0", },
                             className="nine columns",
                             ),
                 ],
@@ -309,29 +288,29 @@ p2 = html.Div([
 
                 html.Div([
 
-                    html.H2(children = "3.",
-                            style={"margin": "0 0 0 0",},
+                    html.H2(children="3.",
+                            style={"margin": "0 0 0 0", },
                             className="one columns",
                             ),
 
                     # Image of Best Artist
                     html.Img(
                         id="Best_artist_image3",
-                        src=df.loc[df["Artist"] == best_artist_name(df,2)]["artist_image"].iloc[0],
+                        src=df.loc[df["Artist"] == best_artist_name(df, 2)]["artist_image"].iloc[0],
                         style={"margin": "0 0 50px 0"},
                         className="two columns",
                     ),
 
                     # Name of best artist
-                    html.H5(id="best_artist_name_change3", children=best_artist_name(df,2),
-                            style={"margin": "0 0 0 0",},
+                    html.H5(id="best_artist_name_change3", children=best_artist_name(df, 2),
+                            style={"margin": "0 0 0 0", },
                             className="nine columns",
                             ),
 
                     # The amount of times the artist has been in the list
                     html.H5(id="best_artist_count3",
-                            children="{} times in the list".format(best_artist_count(df,2)),
-                            style={"margin": "0 0 0 0",},
+                            children="{} times in the list".format(best_artist_count(df, 2)),
+                            style={"margin": "0 0 0 0", },
                             className="nine columns",
                             ),
                 ],
@@ -346,72 +325,72 @@ p2 = html.Div([
                 # subrow contains the best song info
                 html.Div([
 
-                    html.H2(children = "1.",
-                            style={"margin": "0 0 0 0",},
+                    html.H2(children="1.",
+                            style={"margin": "0 0 0 0", },
                             className="one columns",
                             ),
                     html.Img(id="Best_rated_image",
-                             src=df.loc[df["Title"] == best_rated_song2(df,0)]["album_image"].iloc[0],
+                             src=df.loc[df["Title"] == best_rated_song2(df, 0)]["album_image"].iloc[0],
                              # height='160', width='160',
                              style={"margin": "0 0 50px 0"},
                              className="two columns"),
                     html.H5(id="best_rated_song",
-                            children=best_rated_song(df,0),
+                            children=best_rated_song(df, 0),
                             style={"margin": "0 0 0 0"},
                             className="nine columns"),
                     html.H5(id="best_rated_count",
-                            children=best_rated_count(df,0),
+                            children=best_rated_count(df, 0),
                             style={"margin": "0 0 0 0"},
                             className="nine columns"),
                 ], className="row"),
 
                 html.Div([
 
-                    html.H2(children = "2.",
-                            style={"margin": "0 0 0 0",},
+                    html.H2(children="2.",
+                            style={"margin": "0 0 0 0", },
                             className="one columns",
                             ),
                     html.Img(id="Best_rated_image2",
-                             src=df.loc[df["Title"] == best_rated_song2(df,1)]["album_image"].iloc[0],
+                             src=df.loc[df["Title"] == best_rated_song2(df, 1)]["album_image"].iloc[0],
                              # height='160', width='160',
                              style={"margin": "0 0 50px 0"},
                              className="two columns"),
                     html.H5(id="best_rated_song2",
-                            children=best_rated_song(df,1),
+                            children=best_rated_song(df, 1),
                             style={"margin": "0 0 0 0"},
                             className="nine columns"),
                     html.H5(id="best_rated_count2",
-                            children=best_rated_count(df,1),
+                            children=best_rated_count(df, 1),
                             style={"margin": "0 0 0 0"},
                             className="nine columns"),
                 ], className="row"),
 
                 html.Div([
 
-                    html.H2(children = "3.",
-                            style={"margin": "0 0 0 0",},
+                    html.H2(children="3.",
+                            style={"margin": "0 0 0 0", },
                             className="one columns",
                             ),
                     html.Img(id="Best_rated_image3",
-                             src=df.loc[df["Title"] == best_rated_song2(df,2)]["album_image"].iloc[0],
+                             src=df.loc[df["Title"] == best_rated_song2(df, 2)]["album_image"].iloc[0],
                              # height='160', width='160',
                              style={"margin": "0 0 50px 0"},
                              className="two columns"),
                     html.H5(id="best_rated_song3",
-                            children=best_rated_song(df,2),
+                            children=best_rated_song(df, 2),
                             style={"margin": "0 0 0 0"},
                             className="nine columns"),
                     html.H5(id="best_rated_count3",
-                            children=best_rated_count(df,2),
+                            children=best_rated_count(df, 2),
                             style={"margin": "0 0 0 0"},
                             className="nine columns"),
                 ], className="row"),
 
-            ], className = "six columns"),
+            ], className="six columns"),
 
         ], className="row"),
 
-            # Row contains the highest climber and biggest lost
+        # Row contains the highest climber and biggest lost
         html.Div([
 
             # Contains the highest climber
@@ -419,13 +398,13 @@ p2 = html.Div([
                 get_subheader(title="Highest climber", size=4, className="gs-header gs-text-header"),
 
                 html.Div([
-                    html.H2(children = "1.",
-                            style={"margin": "0 0 0 0",},
+                    html.H2(children="1.",
+                            style={"margin": "0 0 0 0", },
                             className="one columns",
                             ),
                     html.Img(
                         id="highest_climb",
-                        src=df.loc[df["Title"] == highest_climber_title(df,0)]["album_image"].iloc[0],
+                        src=df.loc[df["Title"] == highest_climber_title(df, 0)]["album_image"].iloc[0],
                         # height='160', width='160',
                         style={"margin": "0 0 50px 0"},
                         className="two columns",
@@ -433,65 +412,64 @@ p2 = html.Div([
 
                     html.H5(
                         id="highest_climber",
-                        children=highest_climber(df,0),
-                        style={"margin": "0 0 0 0",},
+                        children=highest_climber(df, 0),
+                        style={"margin": "0 0 0 0", },
                         className="nine columns",
-                            ),
+                    ),
 
                     html.H5(
                         id="highest_climber_count",
-                        children=highest_climber_count(df,0),
+                        children=highest_climber_count(df, 0),
                         style={"margin": "0 0 0 0"},
                         className="nine columns"),
                 ], className="row"),
 
                 html.Div([
-                    html.H2(children = "2.",
-                            style={"margin": "0 0 0 0",},
+                    html.H2(children="2.",
+                            style={"margin": "0 0 0 0", },
                             className="one columns",
                             ),
                     html.Img(
                         id="highest_climb2",
-                        src=df.loc[df["Title"] == highest_climber_title(df,1)]["album_image"].iloc[0],
+                        src=df.loc[df["Title"] == highest_climber_title(df, 1)]["album_image"].iloc[0],
                         # height='160', width='160',
                         style={"margin": "0 0 50px 0"},
                         className="two columns",
                     ),
                     html.H5(
                         id="highest_climber2",
-                        children=highest_climber(df,1),
-                        style={"margin": "0 0 0 0",},
+                        children=highest_climber(df, 1),
+                        style={"margin": "0 0 0 0", },
                         className="nine columns",
-                            ),
+                    ),
                     html.H5(
                         id="highest_climber_count2",
-                        children=highest_climber_count(df,1),
+                        children=highest_climber_count(df, 1),
                         style={"margin": "0 0 0 0"},
                         className="nine columns"),
                 ], className="row"),
 
-
                 html.Div([
-                    html.H2(children = "3.",
-                            style={"margin": "0 0 0 0",},
+                    html.H2(children="3.",
+                            style={"margin": "0 0 0 0", },
                             className="one columns",
                             ),
                     html.Img(
                         id="highest_climb3",
-                        src=df.loc[df["Title"] == highest_climber_title(df,2)]["album_image"].iloc[0],
+                        src=df.loc[df["Title"] == highest_climber_title(df, 2)]["album_image"].iloc[0],
                         # height='160', width='160',
                         style={"margin": "0 0 50px 0"},
                         className="two columns",
                     ),
                     html.H5(
                         id="highest_climber3",
-                        children=highest_climber(df,2),
-                        style={"margin": "0 0 0 0",},
+                        children=highest_climber(df, 2),
+                        style={"margin": "0 0 0 0", },
                         className="nine columns",
-                            ),
+                    ),
                     html.H5(
                         id="highest_climber_count3",
-                        children=highest_climber_count(df,2),
+                        children=highest_climber_count(df, 2),
                         style={"margin": "0 0 0 0"},
                         className="nine columns"),
                 ], className="row"),
@@ -504,80 +482,79 @@ p2 = html.Div([
 
                 html.Div([
 
-                    html.H2(children = "1.",
-                        style={"margin": "0 0 0 0",},
-                        className="one columns",
-                        ),
+                    html.H2(children="1.",
+                            style={"margin": "0 0 0 0", },
+                            className="one columns",
+                            ),
                     html.Img(
                         id="biggest_los",
-                        src=df.loc[df["Title"] == loser_title(df,0)]["album_image"].iloc[0],
+                        src=df.loc[df["Title"] == loser_title(df, 0)]["album_image"].iloc[0],
                         # height='160', width='160',
                         style={"margin": "0 0 50px 0"},
                         className="two columns",
-                        ),
-
+                    ),
 
                     html.H5(
                         id="biggest_loser",
-                        children=biggest_loser(df,0),
+                        children=biggest_loser(df, 0),
                         style={"margin": "0 0 0 0", },
                         className="nine columns",
-                            ),
+                    ),
 
                     html.H5(
                         id="biggest_loser_count",
-                        children=biggest_loser_count(df,0),
+                        children=biggest_loser_count(df, 0),
                         style={"margin": "0 0 0 0"},
                         className="nine columns"),
                 ], className="row"),
 
                 html.Div([
 
-                    html.H2(children = "2.",
-                        style={"margin": "0 0 0 0",},
-                        className="one columns",
-                        ),
+                    html.H2(children="2.",
+                            style={"margin": "0 0 0 0", },
+                            className="one columns",
+                            ),
                     html.Img(
                         id="biggest_los2",
-                        src=df.loc[df["Title"] == loser_title(df,1)]["album_image"].iloc[0],
+                        src=df.loc[df["Title"] == loser_title(df, 1)]["album_image"].iloc[0],
                         # height='160', width='160',
                         style={"margin": "0 0 50px 0"},
                         className="two columns",
-                        ),
+                    ),
                     html.H5(
                         id="biggest_loser2",
-                        children=biggest_loser(df,1),
+                        children=biggest_loser(df, 1),
                         style={"margin": "0 0 0 0", },
                         className="nine columns",
-                            ),
+                    ),
                     html.H5(
                         id="biggest_loser_count2",
-                        children=biggest_loser_count(df,1),
+                        children=biggest_loser_count(df, 1),
                         style={"margin": "0 0 0 0"},
                         className="nine columns"),
                 ], className="row"),
                 html.Div([
 
-                    html.H2(children = "3.",
-                        style={"margin": "0 0 0 0",},
-                        className="one columns",
-                        ),
+                    html.H2(children="3.",
+                            style={"margin": "0 0 0 0", },
+                            className="one columns",
+                            ),
                     html.Img(
                         id="biggest_los3",
-                        src=df.loc[df["Title"] == loser_title(df,2)]["album_image"].iloc[0],
+                        src=df.loc[df["Title"] == loser_title(df, 2)]["album_image"].iloc[0],
                         # height='160', width='160',
                         style={"margin": "0 0 50px 0"},
                         className="two columns",
-                        ),
+                    ),
                     html.H5(
                         id="biggest_loser3",
-                        children=biggest_loser(df,2),
+                        children=biggest_loser(df, 2),
                         style={"margin": "0 0 0 0", },
                         className="nine columns",
-                            ),
+                    ),
                     html.H5(
                         id="biggest_loser_count3",
-                        children=biggest_loser_count(df,2),
+                        children=biggest_loser_count(df, 2),
                         style={"margin": "0 0 0 0"},
                         className="nine columns"),
                 ], className="row"),
@@ -590,130 +567,6 @@ p2 = html.Div([
     id="tab_id_2",
     style={'display': "none"}
 )
-
-# p3 = html.Div([
-#     Header("Advanced Analytics"),
-#
-#     # Header left & Header right
-#     html.Div([
-#         html.Div([get_subheader("Number of songs per publication year", size=3, className="gs-header gs-text-header")],
-#                  style={"width": "47%"}, className="six columns"),
-#         html.Div([get_subheader("Publication year averages", size=3, className="gs-header gs-text-header")],
-#                  style={"width": "48%", 'float': 'right'}, className="six_columns"),
-#     ], className="row twelve columns"),
-#
-#     # Slider & Dropdown
-#     html.Div([
-#         # year slider
-#         html.Div([
-#             html.Div([html.H6(children="Top2000 Year: ")], style={"padding": "20 0 0 20"}, className="three columns"),
-#
-#             # TODO adapt this to the proper years
-#             # The RangeSlider to select the years
-#             html.Div([
-#                 dcc.Slider(
-#                     id="yearSlider",
-#                     min=1999,
-#                     max=2018,
-#                     marks={k: v for k, v in generate_year_options(df).items() if int(k) % 2 == 1},
-#                     ## select only odd years
-#                     step=1,
-#                     value=2018,
-#                     updatemode='drag',
-#                 )
-#             ], style={"width": "71%"}, className="nine columns")
-#         ], className="six columns"),  #### row twelve columns
-#
-#         # dropdown menu
-#         html.Div([
-#             html.Div([html.H6(children="Inspect attribute: ")], className="three columns"),
-#
-#             # TODO set proper default value
-#             html.Div([
-#                 dcc.Dropdown(
-#                     id="dd_song_p3",
-#                     options=create_dd_options(p3_col_options),
-#                     value="danceability",
-#                     multi=False,
-#                     style={"width": "80%"},
-#                 ),
-#             ], className="nine columns"),
-#         ], className="six columns"),  ##### row twelve columns
-#     ]),
-#
-#     # Historical & Other plot
-#     html.Div([
-#         html.Div([
-#             dcc.Graph(id='historical_plot',  # TODO Have to update this figure based on the slider on same page
-#                       figure=generate_adv_analytic_1(df, 2018),
-#                       config=config,
-#                       style={
-#                           "margin": "0 0 0 0",
-#                           # "width": "100%"
-#                       },
-#                       )
-#         ], className="six columns"),
-#         html.Div([
-#             dcc.Graph(id='other_plot',
-#                       figure=generate_adv_analytic_2(df, 'danceability'),
-#                       config=config,
-#                       style={
-#                           "margin": "0 0 10 0",
-#                           # 'width': '100%'
-#                       },
-#                       )
-#         ], className="six columns"),
-#     ], className="row twelve columns"),
-#
-#     # pattern analysis title + markdown text
-#     html.Div([
-#         get_subheader('Pattern Analysis', size=4, className="gs-header gs-text-header"),
-#
-#         html.Div([dcc.Markdown(dedent('''
-#
-#
-#
-#         Introduction/exlpanation to come. Possibly also add input for number of clusters
-#
-#
-#                                         '''))]),
-#
-#     ], className="row twelve columns"),
-#
-#     # row contains left and right plot for the second row of visualisations
-#     html.Div([
-#         # the left plot
-#         html.Div([
-#             dcc.Graph(id='left_plot',
-#                       figure=generate_left_plot(df3),
-#                       style={
-#                           "margin": "0 0 0 0",
-#                           # 'width': '100%'
-#                       },
-#                       ),
-#         ], className="six columns"),
-#         # style={'width': '45%', 'display': 'inline-block', 'float': 'left',
-#         #        'border': 'thin lightgrey solid', 'padding': '10 10 1=0 10'}
-#
-#         # the right plot
-#         html.Div([
-#             dcc.Graph(id='right_plot',
-#                       figure=generate_right_plot(df, df3),
-#                       style={
-#                           "margin": "0 0 10 0",
-#                           # 'width': '100%'
-#                       },
-#                       )
-#         ], className="six columns")
-#         # style={'width': '45%', 'display': 'inline-block', 'float': 'right',
-#         #            'border': 'thin lightgrey solid'}),  # , 'padding': '10 10 10 10'
-#
-#     ], className="row twelve columns"),
-#
-# ],
-#     id="tab_id_3",
-#     style={'display':"none"}
-# )
 
 
 p3 = html.Div([
@@ -795,12 +648,12 @@ p3 = html.Div([
         html.Div([dcc.Markdown(dedent('''
         By clicking on one of these buttons, you decide how many groups to make from the data. A special algorithm will 
         make sure that significantly different groups are created.
-        
+
         The visualisation on the left side shows the song position of typical songs within the group.
-        
+
         The visualisation on the right side shows the characteristics of the typical song from the group.
         '''))
-                  ],style={"font-size": "120%", "margin-left": "5px"},),
+                  ], style={"font-size": "120%", "margin-left": "5px"}, ),
 
         html.Div([html.Button('2', id='button1', n_clicks_timestamp=0),
                   html.Button('4', id='button2', n_clicks_timestamp=0),
@@ -845,6 +698,7 @@ p3 = html.Div([
     style={'display': "none"}
 )
 
+
 p4 = html.Div([
     Header("Lyric Analysis"),
 
@@ -869,13 +723,12 @@ p4 = html.Div([
             dcc.Dropdown(
                 id='ddWordSearch',
                 options=all_words_lable_value,
-                value=['honey', 'heart','love'],
+                value=['honey', 'heart', 'love'],
                 multi=True,
                 style={"width": "80%"},
             ),
         ], className="nine columns"),
     ], className="row twelve columns"),
-
 
     html.Div([
         html.Div([
@@ -883,12 +736,13 @@ p4 = html.Div([
 
             dcc.Graph(
                 id='offensiveWordsPlot',
-                figure=create_offensive_words_plot(dict_offensive_words, ['dirty', 'shit', 'sex'], xaxis_type_value="Year"),
+                figure=create_offensive_words_plot(dict_offensive_words, ['dirty', 'shit', 'sex'],
+                                                   xaxis_type_value="Year"),
                 config=config,
                 style={
                     "margin": "0 0 0 0",
                     # "width": "100%"
-                },)
+                }, )
         ], className="six columns"),
 
         html.Div([
@@ -896,12 +750,12 @@ p4 = html.Div([
 
             dcc.Graph(
                 id='firstAppearance',
-                figure=create_search_words_plot(df_merged_have_lyrics, ['honey', 'heart','love']),
+                figure=create_search_words_plot(df_merged_have_lyrics, ['honey', 'heart', 'love']),
                 config=config,
                 style={
                     "margin": "0 0 0 0",
                     # "width": "100%"
-                },)
+                }, )
         ], className="six columns"),
 
         # get_subheader("Word cloud", size=3, className="gs-header gs-text-header"),
@@ -909,9 +763,7 @@ p4 = html.Div([
 
     ], className="row twelve columns")
 
-
-
-## THIS WAS THE VERY EXTENSIVE PLOT
+    ## THIS WAS THE VERY EXTENSIVE PLOT
     # dcc.Markdown(children=markdown_text),
     # dcc.Graph(
     #     id='word-count-vs-year-all',
@@ -941,109 +793,11 @@ p4 = html.Div([
     # ),
 ],
     id="tab_id_4",
-    style={'display':"none"}
+    style={'display': "none"}
 )
 
-# p4 = html.Div([
-#     Header("Lyric Analysis"),
-#
-#     html.Div([
-#         html.Div([
-#             get_subheader("Appearance of Offensive Words", size=3, className="gs-header gs-text-header"),
-#
-#             html.Div([
-#                 html.Div([html.H6(children="Offensive words: ")], className="three columns"),
-#
-#                 html.Div([
-#                     dcc.Dropdown(
-#                         id='ddOffensiveWords',
-#                         options=offensive_word_options,
-#                         value=['dirty', 'shit', 'sex'],
-#                         multi=True,
-#                         style={"width": "80%"},
-#                     ),
-#                 ], className="nine columns"),
-#             ], className="six columns"),
-#
-#             dcc.Graph(
-#                 id='offensiveWordsPlot',
-#                 figure=create_offensive_words_plot(dict_offensive_words, ['dirty', 'shit', 'sex'], xaxis_type_value="Year"),
-#                 config=config,
-#                 style={
-#                     "margin": "0 0 0 0",
-#                     # "width": "100%"
-#                 },)
-#         ], className="six columns"),
-#
-#         html.Div([
-#             get_subheader("First Appearance of Words", size=3, className="gs-header gs-text-header"),
-#
-#             html.Div([
-#                 html.Div([html.H6(children="Words to search: ")], className="three columns"),
-#
-#                 html.Div([
-#                     dcc.Dropdown(
-#                         id='ddWordSearch',
-#                         options=all_words_lable_value,
-#                         value=['honey', 'heart', 'love'],
-#                         multi=True,
-#                         style={"width": "80%"},
-#                     ),
-#                 ], className="nine columns"),
-#             ], className="six columns"),
-#
-#             dcc.Graph(
-#                 id='firstAppearance',
-#                 figure=create_search_words_plot(df_merged_have_lyrics, ['honey', 'heart','love']),
-#                 config=config,
-#                 style={
-#                     "margin": "0 0 0 0",
-#                     # "width": "100%"
-#                 },)
-#         ], className="six columns"),
-#
-#         # get_subheader("Word cloud", size=3, className="gs-header gs-text-header"),
-#         # html.Div(id='my-div'),
-#
-#     ], className="row twelve columns")
-#
-#
-#
-# ## THIS WAS THE VERY EXTENSIVE PLOT
-#     # dcc.Markdown(children=markdown_text),
-#     # dcc.Graph(
-#     #     id='word-count-vs-year-all',
-#     #     figure={
-#     #         'data': [
-#     #             go.Scatter(
-#     #                 y=df_lyrics[df_lyrics['Artist'] == i]['lyrics_word_count'],
-#     #                 x=df_lyrics[df_lyrics['Artist'] == i]['Year'],
-#     #                 text=df_lyrics[df_lyrics['Artist'] == i]['Title'],
-#     #                 mode='markers',
-#     #                 opacity=0.6,
-#     #                 marker={
-#     #                     'size': 10,
-#     #                     'line': {'width': 0.5, 'color': 'white'}
-#     #                 },
-#     #                 name=i
-#     #             ) for i in sorted(df_lyrics.Artist.unique())
-#     #         ],
-#     #         'layout': go.Layout(
-#     #             yaxis={'type': 'log', 'title': 'number of words in song'},
-#     #             xaxis={'title': 'song release year'},
-#     #             margin={'l': 100, 'b': 40, 't': 10, 'r': 10},
-#     #             legend={'x': 1, 'y': 1},
-#     #             hovermode='closest'
-#     #         )
-#     #     }
-#     # ),
-# ],
-#     id="tab_id_4",
-#     style={'display':"none"}
-# )
 
-
-
+# Define the app layout
 app.layout = html.Div(
     [
         # components which contains the tab structure
@@ -1322,33 +1076,6 @@ def playSong(current_song):
     current_song = pd.read_json(current_song, orient='split')
     return get_track_sample(current_song)
 
-# TODO maybe uncomment again?
-# @app.callback(Output("rankPlot", "figure"),
-#               [#Input("_filtered_df_stored", "children"),
-#                Input("dd_song_p1", "value"),
-#                Input("yearRange_p1", "value"),
-#                ])
-# def update_rankplot(songname, years): #df,
-#     # df = pd.read_json(df, orient="split")
-#     return create_rank_plot(df, songname, years)
-#
-#
-# @app.callback(Output("radarPlot", "figure"),
-#               [Input("_current_song_stored", "children")])
-# def update_radarplot(current_song):
-#     current_song = pd.read_json(current_song, orient="split")
-#     return create_radar(current_song)
-#
-#
-# @app.callback(Output("attributePlot", "figure"),
-#               [Input("dd_song_p1", "value"),
-#                Input("dd_attribute", "value"),
-#                ])
-# def update_attributePlot(songname, attribute):
-#     '''Not using filtered df here so we can cut the size of that df.
-#     This one will always be based on the songname anyway '''
-#     return create_attributePlot(df, songname, attribute)
-#
 
 ######################################################################################################################
 ################################  FUN FACTS  #########################################################################
@@ -1510,73 +1237,6 @@ def update_output_div(input_value):
     return create_search_words_plot(df_merged_have_lyrics, input_value)
 
 
-# @app.callback(
-#     Output(component_id='my-div', component_property='children'),
-#     [Input(component_id='ddArtist', component_property='value'),
-#      Input(component_id='ddGenre', component_property='value'),
-#      Input(component_id='releaseYearSlider', component_property='value')]
-# )
-# ## create the visualization based on the input value and pass it as output children component for my_div
-#
-# def update_output_div(input_artist, input_genre, input_year):
-#     ## create a tuple from input values to be used as key for the dictionary of word clouds
-#     temp_tuple_input = tuple(list(item for item in [input_artist, input_year, input_genre] if item != None))
-#
-#     ## convert one input from tuple to format that is acceptable for dictionary of word clouds keys
-#     if len(temp_tuple_input) == 1:
-#
-#         if type(temp_tuple_input[0]) == int:
-#             temp_tuple_input = int(temp_tuple_input[0])
-#
-#         elif type(temp_tuple_input[0]) == str:
-#             temp_tuple_input = temp_tuple_input[0]
-#
-#     if temp_tuple_input in list_dictionary_keys:
-#
-#         ## get the values related to plot the wordcloud
-#
-#         word_cloud = dic_Artist_wordcloud[temp_tuple_input][1]
-#         length = dic_Artist_wordcloud[temp_tuple_input][2]
-#         colors = dic_Artist_wordcloud[temp_tuple_input][3]
-#         weights = dic_Artist_wordcloud[temp_tuple_input][4]
-#
-#     else:
-#         temp_tuple_input = ('pink', 'blues')
-#         word_cloud = dic_Artist_wordcloud[temp_tuple_input][1]
-#         length = dic_Artist_wordcloud[temp_tuple_input][2]
-#         colors = dic_Artist_wordcloud[temp_tuple_input][3]
-#         weights = dic_Artist_wordcloud[temp_tuple_input][4]
-#
-#     return (html.Div([
-#
-#         dcc.Markdown(children="""## words cloud
-#     In this graph you can see that higher frequncy words apeear in bigger font size"""),
-#
-#         dcc.Graph(
-#             id='word-cloud',
-#             figure={
-#                 'data':
-#                     [
-#                         go.Scatter(
-#                             x=[random.random() for i in range(length)],
-#                             y=[random.random() for i in range(length)],
-#                             mode='text',
-#                             text=list(word_cloud.words_.keys()),
-#                             hoverinfo='text',
-#                             marker={'opacity': 0.3},
-#                             textfont={'size': weights,
-#                                       'color': colors}
-#                         )],
-#
-#                 # 'color':  colors,
-#                 'layout': go.Layout(
-#                     xaxis={'showgrid': False, 'showticklabels': False, 'zeroline': False},
-#                     yaxis={'showgrid': False, 'showticklabels': False, 'zeroline': False}
-#                 )
-#             }
-#         )
-#     ]))
-
-
+# Make the app run on execution
 if __name__ == '__main__':
     app.run_server(debug=True)
