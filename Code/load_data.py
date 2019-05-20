@@ -15,7 +15,6 @@ def load_small_full_file():
     df.loc[:, year_list] = df.loc[:, year_list].replace(0, np.nan)
     df['primary_key'] = pd.Series(list(zip(df.Title,df.Artist)))
     df['display_value'] = df.primary_key.apply(lambda x: '{} ({})'.format(x[0],x[1]))
-    # df.replace(0, 2001, inplace=True)
     return df
 
 
