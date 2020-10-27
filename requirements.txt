@@ -28,7 +28,7 @@ cligj==0.4.0
 colorlover==0.2.1
 colour==0.1.5
 configparser==3.5.0
-cryptography==2.2.2
+cryptography==3.2
 cufflinks==0.13.0
 cycler==0.10.0
 Cython==0.28.3
