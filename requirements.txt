@@ -148,7 +148,7 @@ pycryptodome==3.6.6
 pyexcel-io==0.5.9.1
 pyexcel-ods==0.5.3
 pygame==1.9.5
-Pygments==2.2.0
+Pygments==2.7.4
 pylint==2.2.2
 pyOpenSSL==17.5.0
 pyparsing==2.2.0
