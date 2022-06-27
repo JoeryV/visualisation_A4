@@ -164,7 +164,7 @@ PyWavelets==0.5.2
 PyYAML==3.13
 pyzmq==17.0.0
 qgrid==1.0.5
-reportlab==3.5.6
+reportlab==3.5.55
 requests==2.21.0
 requests-file==1.4.3
 requests-ftp==0.3.1
