@@ -102,7 +102,7 @@ mistune==0.8.3
 mobilechelonian==0.5
 mock==2.0.0
 munch==2.3.2
-nbconvert==5.3.1
+nbconvert==6.3.0
 nbformat==4.4.0
 nbstripout==0.3.3
 networkx==2.2
