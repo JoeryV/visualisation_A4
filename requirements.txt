@@ -18,7 +18,7 @@ boltons==18.0.1
 branca==0.2.0
 camelot-py==0.2.3
 catboost==0.11.0
-certifi==2018.11.29
+certifi==2022.12.7
 cffi==1.11.5
 chardet==3.0.4
 chroma-py==0.1.0.dev1
